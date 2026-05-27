@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Focus Garden MVP</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <h1>Focus Garden</h1>
+        <p>Task to mission to reward</p>
+      </div>
+      <div class="seed-pill">
+        <span id="seedCount">0</span>
+        <span>seeds</span>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="Screens">
+      <button class="tab active" data-screen="tasksScreen">Tasks</button>
+      <button class="tab" data-screen="missionScreen">Mission</button>
+      <button class="tab" data-screen="rewardScreen">Reward</button>
+      <button class="tab" data-screen="gardenScreen">Garden</button>
+    </nav>
+
+    <p id="statusMessage" class="status" role="status"></p>
+
+    <section id="tasksScreen" class="screen active">
+      <div class="panel">
+        <h2>Create Task</h2>
+        <form id="taskForm" class="task-form">
+          <input id="taskIdInput" type="hidden" />
+          <label for="taskTitleInput">Task title</label>
+          <input id="taskTitleInput" type="text" placeholder="Study German vocabulary" required />
+
+          <label for="taskDurationInput">Mission length</label>
+          <select id="taskDurationInput">
+            <option value="25">25 minutes</option>
+            <option value="45">45 minutes</option>
+            <option value="60">60 minutes</option>
+          </select>
+
+          <div class="actions">
+            <button class="primary" type="submit">Save Task</button>
+            <button id="cancelEditBtn" type="button" class="secondary hidden">Cancel Edit</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Task List</h2>
+          <span id="taskCount" class="muted">0 tasks</span>
+        </div>
+        <div id="taskList" class="task-list"></div>
+      </div>
+    </section>
+
+    <section id="missionScreen" class="screen">
+      <div class="panel">
+        <h2>Active Mission</h2>
+        <div id="missionEmpty" class="empty-state">Start a task to begin a mission.</div>
+        <div id="missionActive" class="mission-card hidden">
+          <p class="eyebrow">Current task</p>
+          <h3 id="missionTitle">Untitled task</h3>
+          <div id="timerDisplay" class="timer">00:00</div>
+          <progress id="missionProgress" max="100" value="0"></progress>
+          <p id="missionMeta" class="muted"></p>
+          <div class="actions">
+            <button id="finishMissionBtn" class="primary" type="button">Finish Mission</button>
+            <button id="abandonMissionBtn" class="danger" type="button">Abandon</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel stub">
+        <h2>Blocked Sites Stub</h2>
+        <p>Blocked-site tracking is intentionally not implemented yet. This panel only reserves the spot for future work.</p>
+      </div>
+    </section>
+
+    <section id="rewardScreen" class="screen">
+      <div class="panel">
+        <h2>Reward Result</h2>
+        <div id="resultContent" class="empty-state">No mission result yet.</div>
+      </div>
+    </section>
+
+    <section id="gardenScreen" class="screen">
+      <div class="panel">
+        <h2>Garden Placeholder</h2>
+        <div class="garden-placeholder">
+          <strong id="gardenSeeds">0 seeds</strong>
+          <p>The garden system is a placeholder for now. Seeds are persisted so a future garden can consume them.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="popup.js"></script>
+</body>
+</html>

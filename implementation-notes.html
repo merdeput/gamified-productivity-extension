@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Focus Garden MVP Implementation Notes</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 32px;
+      max-width: 920px;
+      color: #222;
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    h2 {
+      margin-top: 28px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 6px;
+    }
+
+    code {
+      background: #f2f2f2;
+      border-radius: 4px;
+      padding: 2px 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Focus Garden MVP Implementation Notes</h1>
+
+  <h2>Decisions</h2>
+  <ul>
+    <li>Implemented the MVP in the project root and did not modify the existing <code>focus-garden-extension</code> folder.</li>
+    <li>Used <code>popup/popup.html</code> as the Chrome side panel UI. The folder name remains <code>popup</code>, but the extension action now opens the side panel instead of a popup.</li>
+    <li>Kept all business logic in <code>background.js</code> and used message passing from the UI.</li>
+    <li>Used <code>chrome.storage.local</code> for persistence because it is available in Manifest V3 and does not require a backend.</li>
+    <li>Used <code>chrome.alarms</code> as a lightweight service-worker-friendly way to check mission completion.</li>
+  </ul>
+
+  <h2>Assumptions</h2>
+  <ul>
+    <li>The MVP pipeline means task creation, mission start, timer progress, manual or automatic mission finish, reward calculation, and persisted seed total.</li>
+    <li>Mission durations are limited to 25, 45, and 60 minutes for this MVP.</li>
+    <li>Abandoned missions grant zero seeds and a reduced focus score.</li>
+    <li>Completed missions grant <code>round(durationMinutes * 0.8) + 10</code> seeds and a focus score of 100.</li>
+    <li>The garden placeholder only stores and displays seeds; no flower conversion or visual garden is implemented yet.</li>
+  </ul>
+
+  <h2>Tradeoffs</h2>
+  <ul>
+    <li>The UI is plain HTML, CSS, and JavaScript to keep the project simple and loadable as an unpacked extension.</li>
+    <li>Timer display refreshes every second while the popup or side panel is open, while the background alarm handles completion checks at a coarser interval.</li>
+    <li>The UI file still lives in the existing <code>popup</code> folder to keep the structure simple, but it is configured as a side panel only.</li>
+  </ul>
+
+  <h2>Changed From Original Idea</h2>
+  <ul>
+    <li>Blocked-site logic is represented only by placeholder text and is not wired to web navigation.</li>
+    <li>The garden is represented only by persisted seed count and placeholder copy.</li>
+    <li>No content script is registered because the scoped MVP does not need page-level behavior.</li>
+  </ul>
+
+  <h2>Files Created or Modified</h2>
+  <ul>
+    <li><code>manifest.json</code>: added Manifest V3 configuration, permissions, background service worker, extension action, and side panel path.</li>
+    <li><code>background.js</code>: added storage initialization, task handling, mission lifecycle, timer completion checks, and reward granting.</li>
+    <li><code>background.js</code>: configured the extension action to open the side panel on click.</li>
+    <li><code>popup/popup.html</code>: created the multi-screen popup/side-panel UI.</li>
+    <li><code>popup/popup.css</code>: added basic usable styling.</li>
+    <li><code>popup/popup.js</code>: added UI rendering and message-based interactions with the background service worker.</li>
+    <li><code>implementation-notes.html</code>: recorded implementation decisions and limitations.</li>
+  </ul>
+
+  <h2>Known Limitations</h2>
+  <ul>
+    <li>Blocked sites are not actually blocked yet.</li>
+    <li>The garden does not convert seeds into flowers or visuals yet.</li>
+    <li>There are no browser notifications when a mission completes.</li>
+    <li>There is no import/export, reset button, or settings screen.</li>
+    <li>Automatic mission completion depends on the service worker waking for alarms or UI state refresh.</li>
+  </ul>
+
+  <h2>Next Steps</h2>
+  <ul>
+    <li>Add a reset-data action for development and testing.</li>
+    <li>Add blocked-site rules using <code>webNavigation</code> or <code>declarativeNetRequest</code> when that part of the MVP is ready.</li>
+    <li>Expand the garden from seed storage into flower progress and visual feedback.</li>
+    <li>Add tests for reward calculation and mission state transitions.</li>
+    <li>Add completion notifications after the core flow is stable.</li>
+  </ul>
+</body>
+</html>
