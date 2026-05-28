@@ -11,7 +11,7 @@
     <header class="topbar">
       <div>
         <h1>Focus Garden</h1>
-        <p>Task to mission to reward</p>
+        <p>Tasks, missions, seeds</p>
       </div>
       <div class="seed-pill">
         <span id="seedCount">0</span>
@@ -19,87 +19,120 @@
       </div>
     </header>
 
-    <nav class="tabs" aria-label="Screens">
+    <nav class="tabs" aria-label="Main areas">
       <button class="tab active" data-screen="tasksScreen">Tasks</button>
       <button class="tab" data-screen="missionScreen">Mission</button>
-      <button class="tab" data-screen="rewardScreen">Reward</button>
       <button class="tab" data-screen="gardenScreen">Garden</button>
     </nav>
 
     <p id="statusMessage" class="status" role="status"></p>
 
     <section id="tasksScreen" class="screen active">
-      <div class="panel">
-        <h2>Create Task</h2>
-        <form id="taskForm" class="task-form">
+      <div class="panel compact">
+        <div class="panel-header">
+          <h2>Task Setup</h2>
+          <span id="taskCount" class="muted">0 tasks</span>
+        </div>
+        <form id="taskForm" class="stack">
           <input id="taskIdInput" type="hidden" />
           <label for="taskTitleInput">Task title</label>
           <input id="taskTitleInput" type="text" placeholder="Study German vocabulary" required />
-
-          <label for="taskDurationInput">Mission length</label>
-          <select id="taskDurationInput">
-            <option value="25">25 minutes</option>
-            <option value="45">45 minutes</option>
-            <option value="60">60 minutes</option>
-          </select>
-
           <div class="actions">
             <button class="primary" type="submit">Save Task</button>
-            <button id="cancelEditBtn" type="button" class="secondary hidden">Cancel Edit</button>
+            <button id="cancelEditBtn" type="button" class="secondary hidden">Cancel</button>
           </div>
         </form>
       </div>
 
-      <div class="panel">
-        <div class="panel-header">
-          <h2>Task List</h2>
-          <span id="taskCount" class="muted">0 tasks</span>
-        </div>
+      <div class="panel compact">
+        <h2>Tasks</h2>
         <div id="taskList" class="task-list"></div>
       </div>
     </section>
 
     <section id="missionScreen" class="screen">
-      <div class="panel">
-        <h2>Active Mission</h2>
-        <div id="missionEmpty" class="empty-state">Start a task to begin a mission.</div>
-        <div id="missionActive" class="mission-card hidden">
-          <p class="eyebrow">Current task</p>
-          <h3 id="missionTitle">Untitled task</h3>
-          <div id="timerDisplay" class="timer">00:00</div>
-          <progress id="missionProgress" max="100" value="0"></progress>
-          <p id="missionMeta" class="muted"></p>
-          <div class="actions">
-            <button id="finishMissionBtn" class="primary" type="button">Finish Mission</button>
-            <button id="abandonMissionBtn" class="danger" type="button">Abandon</button>
+      <div class="panel compact">
+        <div class="panel-header">
+          <h2>Mission</h2>
+          <span id="selectedTaskStatus" class="badge">No task</span>
+        </div>
+
+        <div id="missionEmpty" class="empty-state">Create or select a task to configure its mission.</div>
+
+        <div id="missionContent" class="hidden">
+          <div class="mission-head">
+            <p class="eyebrow">Selected task</p>
+            <h3 id="missionTitle">Untitled task</h3>
+          </div>
+
+          <form id="missionForm" class="stack">
+            <div class="grid-three">
+              <label>
+                Work
+                <input id="workDurationInput" type="number" min="0.1" step="any" value="25" required />
+              </label>
+              <label>
+                Rest
+                <input id="restDurationInput" type="number" min="0.1" step="any" value="5" required />
+              </label>
+              <label>
+                Sessions
+                <input id="totalSessionsInput" type="number" min="1" step="1" value="4" required />
+              </label>
+            </div>
+
+            <div class="preset-row" aria-label="Work duration presets">
+              <button type="button" data-work-preset="25">25m</button>
+              <button type="button" data-work-preset="45">45m</button>
+              <button type="button" data-work-preset="60">60m</button>
+              <button id="saveMissionSettingsBtn" type="submit" class="secondary">Save Settings</button>
+            </div>
+
+            <details class="blocking-details">
+              <summary>Blocked-site placeholders</summary>
+              <label for="softBlockedSitesInput">Soft-blocked sites</label>
+              <textarea id="softBlockedSitesInput" placeholder="youtube.com, reddit.com"></textarea>
+              <label for="hardBlockedSitesInput">Hard-blocked sites</label>
+              <textarea id="hardBlockedSitesInput" placeholder="facebook.com, tiktok.com"></textarea>
+              <p class="muted">Saved only. No website blocking runs yet.</p>
+            </details>
+          </form>
+
+          <div class="timer-box">
+            <div class="timer-row">
+              <span id="timerModeLabel" class="mode-pill">idle</span>
+              <span id="sessionLabel" class="muted">Session 0 / 4</span>
+            </div>
+            <div id="timerDisplay" class="timer">00:00</div>
+            <progress id="missionProgress" max="100" value="0"></progress>
+            <p id="missionMeta" class="muted"></p>
+            <div id="rewardNotice" class="reward-notice hidden"></div>
+          </div>
+
+          <div class="actions timer-actions">
+            <button id="startMissionBtn" class="primary" type="button">Start</button>
+            <button id="pauseMissionBtn" type="button">Pause</button>
+            <button id="resumeMissionBtn" type="button">Resume</button>
+            <button id="finishWorkBtn" type="button">Finish Work</button>
+            <button id="skipRestBtn" type="button">Skip Rest</button>
+            <button id="completeMissionBtn" class="primary" type="button">Complete</button>
+            <button id="resetMissionBtn" class="danger" type="button">Reset</button>
           </div>
         </div>
-      </div>
-
-      <div class="panel stub">
-        <h2>Blocked Sites Stub</h2>
-        <p>Blocked-site tracking is intentionally not implemented yet. This panel only reserves the spot for future work.</p>
-      </div>
-    </section>
-
-    <section id="rewardScreen" class="screen">
-      <div class="panel">
-        <h2>Reward Result</h2>
-        <div id="resultContent" class="empty-state">No mission result yet.</div>
       </div>
     </section>
 
     <section id="gardenScreen" class="screen">
-      <div class="panel">
+      <div class="panel compact">
         <h2>Garden Placeholder</h2>
         <div class="garden-placeholder">
           <strong id="gardenSeeds">0 seeds</strong>
-          <p>The garden system is a placeholder for now. Seeds are persisted so a future garden can consume them.</p>
+          <p>The garden is still a placeholder. Mission rewards are saved as seeds for a future garden system.</p>
         </div>
       </div>
     </section>
   </main>
 
-  <script src="popup.js"></script>
+  <script type="module" src="popup.js"></script>
 </body>
 </html>
