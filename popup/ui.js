@@ -35,12 +35,6 @@ function bindEvents() {
     button.addEventListener("click", () => showScreen(button.dataset.screen));
   });
 
-  document.querySelectorAll("[data-work-preset]").forEach((button) => {
-    button.addEventListener("click", () => {
-      $("workDurationInput").value = button.dataset.workPreset;
-    });
-  });
-
   $("taskForm").addEventListener("submit", saveTask);
   $("missionForm").addEventListener("submit", saveMissionSettings);
   $("cancelEditBtn").addEventListener("click", resetTaskForm);
@@ -56,6 +50,13 @@ function bindEvents() {
   $("resetMissionBtn").addEventListener("click", () => {
     const taskId = getSelectedTaskId();
     if (taskId) sendAction("RESET_MISSION", { taskId }, "Mission reset.");
+  });
+  $("viewActiveMissionBtn").addEventListener("click", viewActiveMission);
+  $("completeActiveMissionBtn").addEventListener("click", () => sendAction("COMPLETE_MISSION", null, "Mission completed."));
+  $("resetActiveMissionBtn").addEventListener("click", () => {
+    if (state.activeMission?.taskId) {
+      sendAction("RESET_MISSION", { taskId: state.activeMission.taskId }, "Active mission reset.");
+    }
   });
 }
 
@@ -258,7 +259,7 @@ function createTaskCard(task) {
   item.addEventListener("dragend", () => item.classList.remove("dragging"));
   item.addEventListener("click", (event) => {
     if (event.target.closest("button")) return;
-    selectedTaskId = task.id;
+    selectedTaskId = selectedTaskId === task.id ? "" : task.id;
     render();
   });
 
@@ -314,12 +315,14 @@ function renderMission() {
 
   if (!hasTask) {
     $("selectedTaskStatus").textContent = "No task";
+    renderActiveMissionPanel(null);
     return;
   }
 
   const mission = getVisibleMission();
   $("selectedTaskStatus").textContent = task.status;
   $("missionTitle").textContent = task.title;
+  renderActiveMissionPanel(task);
 
   if (!isEditingMissionForm()) {
     loadMissionForm(task);
@@ -338,6 +341,7 @@ function renderTimer(mission) {
   const elapsed = Math.max(0, periodSeconds - seconds);
   const progress = periodSeconds > 0 ? Math.min(100, Math.round((elapsed / periodSeconds) * 100)) : 0;
   const isActiveSelected = state.activeMission?.taskId === mission.taskId;
+  const hasOtherActiveMission = Boolean(state.activeMission && state.activeMission.taskId !== mission.taskId);
 
   $("timerModeLabel").textContent = mission.timerMode;
   $("sessionLabel").textContent = `Session ${currentWorkNumber} / ${mission.totalSessions}`;
@@ -346,13 +350,27 @@ function renderTimer(mission) {
   $("missionMeta").textContent = `${mission.currentSession} of ${mission.totalSessions} work sessions completed.`;
 
   setMissionInputsDisabled(isActiveSelected && ["work", "rest", "paused"].includes(mission.timerMode));
-  setButtonState("startMissionBtn", isActiveSelected || mission.timerMode === "completed");
+  setButtonState("startMissionBtn", isActiveSelected || hasOtherActiveMission || mission.timerMode === "completed");
   setButtonState("pauseMissionBtn", !isActiveSelected || !["work", "rest"].includes(mission.timerMode));
   setButtonState("resumeMissionBtn", !isActiveSelected || mission.timerMode !== "paused");
   setButtonState("finishWorkBtn", !isActiveSelected || !(mission.timerMode === "work" || mission.previousTimerMode === "work"));
   setButtonState("skipRestBtn", !isActiveSelected || !(mission.timerMode === "rest" || mission.previousTimerMode === "rest"));
   setButtonState("completeMissionBtn", !isActiveSelected || mission.timerMode === "completed" || mission.currentSession < mission.totalSessions);
   setButtonState("resetMissionBtn", false);
+}
+
+function renderActiveMissionPanel(selectedTask) {
+  const activeMission = state.activeMission;
+  const shouldShow = Boolean(activeMission && selectedTask?.id !== activeMission.taskId);
+  $("activeMissionPanel").classList.toggle("hidden", !shouldShow);
+
+  if (!shouldShow) return;
+
+  $("activeMissionTitle").textContent = activeMission.taskTitle || getActiveTask()?.title || "Untitled task";
+  $("activeMissionMode").textContent = activeMission.timerMode;
+  $("activeMissionSession").textContent = `Session ${Math.min(activeMission.currentSession + 1, activeMission.totalSessions)} / ${activeMission.totalSessions}`;
+  $("activeMissionRemaining").textContent = formatSeconds(getDisplaySeconds(activeMission));
+  setButtonState("completeActiveMissionBtn", activeMission.timerMode === "completed" || activeMission.currentSession < activeMission.totalSessions);
 }
 
 function renderRewardNotice(mission) {
@@ -464,6 +482,20 @@ function getSelectedTaskId() {
     return "";
   }
   return task.id;
+}
+
+function getActiveTask() {
+  return (state.tasks || []).find((task) => task.id === state.activeMission?.taskId) || null;
+}
+
+function viewActiveMission() {
+  const activeTask = getActiveTask();
+  if (!activeTask) return;
+
+  selectedTaskId = activeTask.id;
+  loadMissionForm(activeTask);
+  render();
+  showScreen("missionScreen");
 }
 
 function getVisibleMission() {

@@ -284,12 +284,34 @@ textarea {
 
 .task-item,
 .timer-box,
+.active-mission-panel,
 .garden-placeholder {
   min-width: 0;
   padding: clamp(0.55rem, 1.8vw, 0.75rem);
   border: 1px solid #e3dbcf;
   border-radius: 8px;
   background: #fffdf9;
+}
+
+.active-mission-panel {
+  display: grid;
+  gap: clamp(0.45rem, 1.4vw, 0.65rem);
+  margin-bottom: clamp(0.55rem, 1.8vw, 0.75rem);
+  border-color: #b9d8a6;
+  background: #f7fff1;
+}
+
+.active-mission-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.active-mission-grid strong {
+  color: #28563b;
+  font-size: clamp(1.1rem, 5vw, 1.6rem);
+  font-variant-numeric: tabular-nums;
 }
 
 .task-item.selected {
