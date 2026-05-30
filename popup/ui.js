@@ -21,6 +21,7 @@ const $ = (id) => document.getElementById(id);
 
 export async function initUI() {
   bindEvents();
+  $("deadlineDateInput").value = getTodayDateString();
   await refreshState();
   if (timerId) clearInterval(timerId);
   timerId = setInterval(refreshState, 1000);
@@ -90,7 +91,8 @@ async function saveTask(event) {
   const payload = buildTaskPayload({
     taskId,
     title: $("taskTitleInput").value,
-    fallbackTask: existingTask
+    fallbackTask: existingTask,
+    useTaskFormDeadline: true
   });
 
   const validationError = getValidationError(payload);
@@ -115,7 +117,8 @@ async function saveMissionSettings(event) {
   const payload = buildTaskPayload({
     taskId: task.id,
     title: task.title,
-    fallbackTask: task
+    fallbackTask: task,
+    useTaskFormDeadline: false
   });
 
   const validationError = getValidationError(payload);
@@ -127,11 +130,14 @@ async function saveMissionSettings(event) {
   await sendAction("UPDATE_TASK", payload, "Mission settings saved.");
 }
 
-function buildTaskPayload({ taskId, title, fallbackTask }) {
+function buildTaskPayload({ taskId, title, fallbackTask, useTaskFormDeadline }) {
   const mission = fallbackTask?.mission || {};
   return {
     taskId,
     title,
+    deadlineDate: useTaskFormDeadline
+      ? $("deadlineDateInput")?.value || fallbackTask?.deadlineDate || getTodayDateString()
+      : fallbackTask?.deadlineDate || getTodayDateString(),
     workDurationMinutes: Number($("workDurationInput")?.value || mission.workDurationMinutes || 25),
     restDurationMinutes: Number($("restDurationInput")?.value || mission.restDurationMinutes || 5),
     totalSessions: Number($("totalSessionsInput")?.value || mission.totalSessions || 4),
@@ -185,46 +191,118 @@ function renderTasks() {
   $("taskCount").textContent = `${tasks.length} ${tasks.length === 1 ? "task" : "tasks"}`;
   list.innerHTML = "";
 
-  if (tasks.length === 0) {
-    list.innerHTML = `<div class="empty-state">No tasks yet. Create one to start the MVP loop.</div>`;
-    return;
-  }
+  renderDateBoard(list, tasks);
+}
 
-  tasks.forEach((task) => {
-    const mission = task.mission || {};
-    const item = document.createElement("article");
-    item.className = `task-item ${task.id === selectedTaskId ? "selected" : ""}`;
+function renderDateBoard(list, tasks) {
+  const dates = getBoardDates(tasks);
 
-    item.innerHTML = `
-      <div class="task-title-row">
-        <p class="task-title">${escapeHtml(task.title)}</p>
-        <span class="badge">${escapeHtml(task.status)}</span>
-      </div>
-      <p class="muted">${mission.totalSessions || 1} sessions, ${mission.workDurationMinutes || 25}m work, ${mission.restDurationMinutes || 5}m rest</p>
-      <div class="actions">
-        <button class="primary" data-action="select">Select</button>
-        <button data-action="edit">Rename</button>
-        <button data-action="reset">Reset</button>
-        <button class="danger" data-action="delete">Delete</button>
-      </div>
-    `;
+  dates.forEach((date) => {
+    const column = document.createElement("section");
+    column.className = "date-column";
+    column.dataset.deadlineDate = date;
 
-    item.querySelector('[data-action="select"]').addEventListener("click", () => {
-      selectedTaskId = task.id;
-      loadMissionForm(task);
-      render();
-      showScreen("missionScreen");
-    });
-    item.querySelector('[data-action="edit"]').addEventListener("click", () => editTask(task));
-    item.querySelector('[data-action="reset"]').addEventListener("click", () => {
-      selectedTaskId = task.id;
-      sendAction("RESET_TASK", { taskId: task.id }, "Task and mission reset.");
-    });
-    item.querySelector('[data-action="delete"]').addEventListener("click", () => {
-      sendAction("DELETE_TASK", { taskId: task.id }, "Task deleted.");
-    });
+    const title = document.createElement("div");
+    title.className = "date-column-title";
+    title.innerHTML = `<strong>${escapeHtml(formatDateLabel(date))}</strong><span>${escapeHtml(date)}</span>`;
 
-    list.appendChild(item);
+    const dropZone = document.createElement("div");
+    dropZone.className = "date-drop-zone";
+    dropZone.dataset.deadlineDate = date;
+    bindDropZone(dropZone);
+
+    const dateTasks = tasks
+      .filter((task) => task.deadlineDate === date)
+      .sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
+
+    if (!dateTasks.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty-state date-empty";
+      empty.textContent = "Drop tasks here";
+      dropZone.appendChild(empty);
+    }
+
+    dateTasks.forEach((task) => dropZone.appendChild(createTaskCard(task)));
+    column.append(title, dropZone);
+    list.appendChild(column);
+  });
+}
+
+function createTaskCard(task) {
+  const mission = task.mission || {};
+  const isSelected = task.id === selectedTaskId;
+  const item = document.createElement("article");
+  item.className = `task-item ${isSelected ? "selected" : ""}`;
+  item.draggable = true;
+  item.dataset.taskId = task.id;
+
+  item.innerHTML = `
+    <div class="task-title-row">
+      <p class="task-title">${escapeHtml(task.title)}</p>
+      <span class="badge">${escapeHtml(task.status)}</span>
+    </div>
+    <p class="muted">${mission.totalSessions || 1} sessions, ${mission.workDurationMinutes || 25}m work, ${mission.restDurationMinutes || 5}m rest</p>
+    <div class="actions task-actions ${isSelected ? "" : "hidden"}">
+      <button class="primary" data-action="select">Select</button>
+      <button data-action="edit">Rename</button>
+      <button data-action="reset">Reset</button>
+      <button class="danger" data-action="delete">Delete</button>
+    </div>
+  `;
+
+  item.addEventListener("dragstart", (event) => {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", task.id);
+    item.classList.add("dragging");
+  });
+  item.addEventListener("dragend", () => item.classList.remove("dragging"));
+  item.addEventListener("click", (event) => {
+    if (event.target.closest("button")) return;
+    selectedTaskId = task.id;
+    render();
+  });
+
+  item.querySelector('[data-action="select"]').addEventListener("click", () => {
+    selectedTaskId = task.id;
+    loadMissionForm(task);
+    render();
+    showScreen("missionScreen");
+  });
+  item.querySelector('[data-action="edit"]').addEventListener("click", () => editTask(task));
+  item.querySelector('[data-action="reset"]').addEventListener("click", () => {
+    selectedTaskId = task.id;
+    sendAction("RESET_TASK", { taskId: task.id }, "Task and mission reset.");
+  });
+  item.querySelector('[data-action="delete"]').addEventListener("click", () => {
+    sendAction("DELETE_TASK", { taskId: task.id }, "Task deleted.");
+  });
+
+  return item;
+}
+
+function bindDropZone(dropZone) {
+  dropZone.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    dropZone.classList.add("drag-over");
+  });
+  dropZone.addEventListener("dragleave", (event) => {
+    if (!dropZone.contains(event.relatedTarget)) {
+      dropZone.classList.remove("drag-over");
+    }
+  });
+  dropZone.addEventListener("drop", async (event) => {
+    event.preventDefault();
+    dropZone.classList.remove("drag-over");
+
+    const taskId = event.dataTransfer.getData("text/plain");
+    const deadlineDate = dropZone.dataset.deadlineDate;
+    if (!taskId || !deadlineDate) return;
+
+    const task = (state.tasks || []).find((item) => item.id === taskId);
+    if (!task || task.deadlineDate === deadlineDate) return;
+
+    await sendAction("RESCHEDULE_TASK", { taskId, deadlineDate }, "Task rescheduled.");
   });
 }
 
@@ -300,6 +378,7 @@ function editTask(task) {
   selectedTaskId = task.id;
   $("taskIdInput").value = task.id;
   $("taskTitleInput").value = task.title;
+  $("deadlineDateInput").value = task.deadlineDate || getTodayDateString();
   $("cancelEditBtn").classList.remove("hidden");
   loadMissionForm(task);
   showScreen("tasksScreen");
@@ -309,6 +388,7 @@ function editTask(task) {
 function resetTaskForm() {
   $("taskForm").reset();
   $("taskIdInput").value = "";
+  $("deadlineDateInput").value = getTodayDateString();
   $("cancelEditBtn").classList.add("hidden");
 }
 
@@ -319,6 +399,52 @@ function loadMissionForm(task) {
   $("totalSessionsInput").value = mission.totalSessions || 4;
   $("softBlockedSitesInput").value = (task.softBlockedSites || mission.softBlockedSites || []).join(", ");
   $("hardBlockedSitesInput").value = (task.hardBlockedSites || mission.hardBlockedSites || []).join(", ");
+}
+
+function getBoardDates(tasks) {
+  const dates = new Set();
+  const today = parseLocalDate(getTodayDateString());
+
+  for (let offset = 0; offset < 5; offset += 1) {
+    dates.add(formatLocalDate(addDays(today, offset)));
+  }
+
+  tasks.forEach((task) => dates.add(task.deadlineDate || getTodayDateString()));
+  return [...dates].sort();
+}
+
+function formatDateLabel(dateString) {
+  const today = parseLocalDate(getTodayDateString());
+  const date = parseLocalDate(dateString);
+  const diffDays = Math.round((date - today) / 86400000);
+
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Tomorrow";
+  if (diffDays === -1) return "Yesterday";
+
+  return date.toLocaleDateString(undefined, { weekday: "long" });
+}
+
+function getTodayDateString() {
+  return formatLocalDate(new Date());
+}
+
+function parseLocalDate(dateString) {
+  const [year, month, day] = String(dateString).split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function addDays(date, days) {
+  const nextDate = new Date(date);
+  nextDate.setDate(nextDate.getDate() + days);
+  return nextDate;
+}
+
+function formatLocalDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function setMissionInputsDisabled(disabled) {
