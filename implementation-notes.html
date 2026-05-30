@@ -111,6 +111,19 @@
     <li><code>completed</code>: all planned work sessions are finished and reward feedback appears in the Mission area.</li>
   </ul>
 
+  <h2>Timer Drift Diagnosis And Fix</h2>
+  <ul>
+    <li>Diagnosis: the visible countdown is rendered in <code>popup/ui.js</code>, which polls the background once per second with <code>GET_STATE</code>.</li>
+    <li>Diagnosis: the timer state transition logic is centralized in <code>state.js</code>, especially <code>advanceTimer</code>, <code>getRemainingSeconds</code>, and <code>getDisplaySeconds</code>.</li>
+    <li>Diagnosis: the timer already stored <code>startedAt</code>, <code>remainingSeconds</code>, and <code>timerMode</code>, and display math used wall-clock time through <code>Date.now()</code>.</li>
+    <li>Cause: while the timer was still running, <code>advanceTimer</code> saved the rounded whole-second <code>remainingSeconds</code> and reset <code>startedAt</code> to the current time on every poll.</li>
+    <li>Cause: if a poll happened before a full second elapsed, fractional elapsed time was discarded. Repeating that over many ticks made the countdown feel slower than real time.</li>
+    <li>Fix: running timers now keep their original <code>remainingSeconds</code> and <code>startedAt</code> baseline until pause, reset, or a work/rest transition. Each render calculates remaining time from actual elapsed wall-clock time.</li>
+    <li>Fix: <code>popup/ui.js</code> now guards against overlapping refresh calls so slow storage/message cycles cannot create stacked refreshes.</li>
+    <li>Result: delayed ticks should catch up on the next render instead of extending the Pomodoro.</li>
+    <li>No notification, sound, or new alarm feature was added for this fix.</li>
+  </ul>
+
   <h2>Blocked Website Placeholders</h2>
   <ul>
     <li>The UI stores soft and hard blocked-site arrays but does not block websites.</li>
@@ -122,12 +135,12 @@
   <ul>
     <li><code>manifest.json</code>: configured the background service worker as an ES module.</li>
     <li><code>background.js</code>: slimmed down to service-worker entrypoint and message dispatch.</li>
-    <li><code>state.js</code>: added centralized domain logic and shared helpers.</li>
+    <li><code>state.js</code>: added centralized domain logic and shared helpers; fixed timer drift by preserving the running timer baseline between transitions.</li>
     <li><code>storage.js</code>: added centralized Chrome storage wrapper.</li>
     <li><code>popup/popup.html</code>: collapsed navigation to Tasks, Mission, and Garden.</li>
     <li><code>popup/popup.html</code>: changed the side-panel script to an ES module.</li>
     <li><code>popup/popup.js</code>: reduced to the side-panel entrypoint.</li>
-    <li><code>popup/ui.js</code>: added compact UI event handling and rendering.</li>
+    <li><code>popup/ui.js</code>: added compact UI event handling and rendering; guards against overlapping timer refresh polls.</li>
     <li><code>popup/popup.css</code>: simplified layout for the compact side-panel UI.</li>
     <li><code>implementation-notes.html</code>: updated this documentation.</li>
   </ul>
