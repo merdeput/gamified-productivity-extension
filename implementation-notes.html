@@ -124,6 +124,18 @@
     <li>No notification, sound, or new alarm feature was added for this fix.</li>
   </ul>
 
+  <h2>Responsive Side Panel Layout</h2>
+  <ul>
+    <li>Diagnosis: the side panel CSS used a fixed <code>body</code> width of <code>410px</code> and a fixed minimum height, so the UI did not adapt when Chrome's side panel was resized.</li>
+    <li>Fix: the root, body, and <code>.app</code> now fill the available viewport, and the active screen owns vertical scrolling. Short panels should scroll content instead of clipping it.</li>
+    <li>Fix: spacing, panel padding, headings, the timer, progress height, and textarea height now use <code>clamp()</code> where useful so the compact UI scales without becoming oversized.</li>
+    <li>Fix: task setup, mission duration inputs, preset buttons, and timer controls use flexible grid/flex sizing with wrapping so controls remain readable on narrow panels and spread naturally on wider panels.</li>
+    <li>Fix: cards, task rows, inputs, and controls use <code>min-width: 0</code>, <code>overflow-wrap</code>, and hidden horizontal overflow to avoid unwanted sideways scrolling.</li>
+    <li>Fix: very narrow panels stack the main tabs and row-style headers/actions using a small media query.</li>
+    <li>The layout remains compact and keeps the existing Tasks, Mission, and Garden screens unchanged.</li>
+    <li>Browser screenshot verification could not be run in this session because the in-app browser was unavailable, so validation was limited to source inspection and static checks.</li>
+  </ul>
+
   <h2>Blocked Website Placeholders</h2>
   <ul>
     <li>The UI stores soft and hard blocked-site arrays but does not block websites.</li>
@@ -141,7 +153,7 @@
     <li><code>popup/popup.html</code>: changed the side-panel script to an ES module.</li>
     <li><code>popup/popup.js</code>: reduced to the side-panel entrypoint.</li>
     <li><code>popup/ui.js</code>: added compact UI event handling and rendering; guards against overlapping timer refresh polls.</li>
-    <li><code>popup/popup.css</code>: simplified layout for the compact side-panel UI.</li>
+    <li><code>popup/popup.css</code>: simplified layout for the compact side-panel UI and made the side panel fluid/responsive.</li>
     <li><code>implementation-notes.html</code>: updated this documentation.</li>
   </ul>
 
