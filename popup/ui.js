@@ -14,12 +14,15 @@ let state = {
 
 let selectedTaskId = "";
 let timerId = null;
+let refreshInFlight = false;
+let refreshQueued = false;
 
 const $ = (id) => document.getElementById(id);
 
 export async function initUI() {
   bindEvents();
   await refreshState();
+  if (timerId) clearInterval(timerId);
   timerId = setInterval(refreshState, 1000);
   window.addEventListener("unload", () => {
     if (timerId) clearInterval(timerId);
@@ -56,15 +59,27 @@ function bindEvents() {
 }
 
 async function refreshState() {
-  const response = await sendMessage({ type: "GET_STATE" });
-  if (!response.ok) {
-    setStatus(response.error);
+  if (refreshInFlight) {
+    refreshQueued = true;
     return;
   }
 
-  state = response.data;
-  if (!selectedTaskId && state.tasks?.length) selectedTaskId = state.activeMission?.taskId || state.tasks[0].id;
-  render();
+  refreshInFlight = true;
+  const response = await sendMessage({ type: "GET_STATE" });
+  refreshInFlight = false;
+
+  if (!response.ok) {
+    setStatus(response.error);
+  } else {
+    state = response.data;
+    if (!selectedTaskId && state.tasks?.length) selectedTaskId = state.activeMission?.taskId || state.tasks[0].id;
+    render();
+  }
+
+  if (refreshQueued) {
+    refreshQueued = false;
+    refreshState();
+  }
 }
 
 async function saveTask(event) {

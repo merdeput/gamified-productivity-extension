@@ -325,10 +325,7 @@ export function advanceTimer(state) {
   mission = normalizeMission(mission, null);
   const remainingSeconds = getRemainingSeconds(mission);
   if (remainingSeconds > 0) {
-    return withState(
-      saveMission(state, mission.taskId, { ...mission, remainingSeconds, startedAt: Date.now() }, "active"),
-      "start"
-    );
+    return withState(state, "start");
   }
 
   if (mission.timerMode === "work") {
