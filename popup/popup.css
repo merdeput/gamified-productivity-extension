@@ -49,6 +49,12 @@ body {
   margin-bottom: clamp(0.5rem, 1.8vw, 0.75rem);
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 h1,
 h2,
 h3,
@@ -117,6 +123,16 @@ button {
   font-weight: bold;
 }
 
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 2.15rem;
+  min-width: 2.15rem;
+  padding: 0;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
 button:disabled,
 input:disabled,
 textarea:disabled {
@@ -145,6 +161,33 @@ textarea:disabled {
   display: none;
   flex: 1 1 auto;
   min-height: 0;
+}
+
+.settings-panel {
+  flex: 0 0 auto;
+  display: grid;
+  gap: 0.55rem;
+  margin-bottom: clamp(0.45rem, 1.5vw, 0.6rem);
+  padding: clamp(0.6rem, 2vw, 0.85rem);
+  border: 1px solid #ded5c8;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.settings-panel h2 {
+  margin-bottom: 0;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.toggle-row input {
+  width: 1rem;
+  min-height: 1rem;
 }
 
 .screen.active {
@@ -435,6 +478,20 @@ progress {
 .garden-placeholder strong {
   display: block;
   font-size: clamp(1.1rem, 4vw, 1.6rem);
+}
+
+body:not(.compact-mode) .app {
+  padding: clamp(0.75rem, 3vw, 1.1rem);
+}
+
+body:not(.compact-mode) .panel,
+body:not(.compact-mode) .settings-panel {
+  padding: clamp(0.8rem, 2.8vw, 1.1rem);
+}
+
+body:not(.compact-mode) .stack,
+body:not(.compact-mode) .screen.active {
+  gap: clamp(0.7rem, 2.4vw, 1rem);
 }
 
 @media (max-width: 340px) {

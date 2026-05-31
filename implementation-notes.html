@@ -94,6 +94,18 @@
     <li>Storage reads and writes are centralized in <code>storage.js</code>.</li>
   </ul>
 
+  <h2>App Settings</h2>
+  <ul>
+    <li>Added a compact gear button in the top-right of the side panel. It toggles an inline settings dropdown instead of opening a separate settings screen.</li>
+    <li>Settings are persisted inside the existing root state object under <code>settings</code> through <code>chrome.storage.local</code>.</li>
+    <li>Default settings are <code>defaultWorkMinutes: 25</code>, <code>defaultRestMinutes: 5</code>, <code>defaultTotalSessions: 4</code>, <code>showCompletedTasks: true</code>, and <code>compactMode: true</code>.</li>
+    <li>New tasks and their new mission objects use the configured work, rest, and session defaults.</li>
+    <li>Changing settings does not overwrite existing tasks, existing mission configuration, active mission timers, deadline scheduling, rewards, or garden seeds.</li>
+    <li>Reset Settings restores only the settings object. It does not delete or reset tasks or missions.</li>
+    <li><code>showCompletedTasks</code> filters completed task cards from the task board without deleting them.</li>
+    <li><code>compactMode</code> adjusts layout density only.</li>
+  </ul>
+
   <h2>Assumptions</h2>
   <ul>
     <li>Task title editing stays in the Task area; mission timing and placeholder blocking settings stay in the Mission area.</li>
@@ -170,14 +182,14 @@
   <h2>Files Changed</h2>
   <ul>
     <li><code>manifest.json</code>: configured the background service worker as an ES module.</li>
-    <li><code>background.js</code>: slimmed down to service-worker entrypoint and message dispatch.</li>
-    <li><code>state.js</code>: added centralized domain logic and shared helpers; fixed timer drift by preserving the running timer baseline between transitions; added task deadline normalization and rescheduling.</li>
+    <li><code>background.js</code>: slimmed down to service-worker entrypoint and message dispatch; added settings action routes.</li>
+    <li><code>state.js</code>: added centralized domain logic and shared helpers; fixed timer drift by preserving the running timer baseline between transitions; added task deadline normalization, rescheduling, settings defaults, settings normalization, and settings actions.</li>
     <li><code>storage.js</code>: added centralized Chrome storage wrapper.</li>
-    <li><code>popup/popup.html</code>: collapsed navigation to Tasks, Mission, and Garden; added the task deadline date input and active mission panel markup.</li>
+    <li><code>popup/popup.html</code>: collapsed navigation to Tasks, Mission, and Garden; added the task deadline date input, active mission panel markup, top-right settings button, and compact settings dropdown.</li>
     <li><code>popup/popup.html</code>: changed the side-panel script to an ES module.</li>
     <li><code>popup/popup.js</code>: reduced to the side-panel entrypoint.</li>
-    <li><code>popup/ui.js</code>: added compact UI event handling and rendering; guards against overlapping timer refresh polls; renders the deadline board, native drag-and-drop rescheduling, and active mission visibility panel.</li>
-    <li><code>popup/popup.css</code>: simplified layout for the compact side-panel UI, made the side panel fluid/responsive, and added compact date-board and active-mission panel styling.</li>
+    <li><code>popup/ui.js</code>: added compact UI event handling and rendering; guards against overlapping timer refresh polls; renders the deadline board, native drag-and-drop rescheduling, active mission visibility panel, and persisted settings behavior.</li>
+    <li><code>popup/popup.css</code>: simplified layout for the compact side-panel UI, made the side panel fluid/responsive, and added compact date-board, active-mission panel, and settings dropdown styling.</li>
     <li><code>implementation-notes.html</code>: updated this documentation.</li>
   </ul>
 
@@ -188,6 +200,7 @@
     <li>Only one active mission is supported at a time.</li>
     <li>There are no completion notifications yet.</li>
     <li>There are no automated tests yet.</li>
+    <li>Settings defaults apply to newly created tasks and missions only; there is no bulk apply-to-existing-tasks action.</li>
   </ul>
 
   <h2>Next Steps</h2>
@@ -196,6 +209,7 @@
     <li>Add tests for timer transitions, reset behavior, and reward calculation.</li>
     <li>Implement real soft and hard website blocking after the mission flow is stable.</li>
     <li>Expand the garden placeholder into a simple visual progress system.</li>
+    <li>Add focused tests for settings normalization, settings reset behavior, and new-task defaults.</li>
   </ul>
 </body>
 </html>

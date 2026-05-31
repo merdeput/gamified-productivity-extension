@@ -14,7 +14,9 @@ import {
   skipRest,
   startMission,
   takeRest,
-  updateTask
+  updateTask,
+  updateSettings,
+  resetSettings
 } from "./state.js";
 
 const MISSION_ALARM = "missionTick";
@@ -68,6 +70,8 @@ async function handleMessage(message) {
   if (type === "RESET_MISSION") return runStateAction((state) => resetMission(state, payload.taskId));
   if (type === "RESET_TASK") return runStateAction((state) => resetTask(state, payload.taskId));
   if (type === "CLEAR_RESULT") return runStateAction(clearResult);
+  if (type === "UPDATE_SETTINGS") return runStateAction((state) => updateSettings(state, payload));
+  if (type === "RESET_SETTINGS") return runStateAction(resetSettings);
 
   throw new Error(`Unknown message type: ${type}`);
 }

@@ -1,7 +1,16 @@
+export const DEFAULT_SETTINGS = {
+  defaultWorkMinutes: 25,
+  defaultRestMinutes: 5,
+  defaultTotalSessions: 4,
+  showCompletedTasks: true,
+  compactMode: true
+};
+
 export const DEFAULT_STATE = {
   tasks: [],
   activeMission: null,
   lastResult: null,
+  settings: { ...DEFAULT_SETTINGS },
   garden: {
     seeds: 0,
     placeholderNote: "Garden visuals are intentionally stubbed for the MVP."
@@ -19,6 +28,7 @@ export function normalizeState(stored = {}) {
     tasks,
     activeMission,
     lastResult: stored.lastResult || null,
+    settings: normalizeSettings(stored.settings),
     garden: {
       ...DEFAULT_STATE.garden,
       ...(stored.garden || {})
@@ -27,7 +37,7 @@ export function normalizeState(stored = {}) {
 }
 
 export function createTask(state, payload) {
-  const taskInput = validateTaskInput(payload);
+  const taskInput = validateTaskInput(payload, state.settings);
   const now = Date.now();
   const task = {
     id: makeId("task"),
@@ -340,6 +350,20 @@ export function clearResult(state) {
   return withState({ ...state, lastResult: null });
 }
 
+export function updateSettings(state, payload) {
+  return withState({
+    ...state,
+    settings: validateSettingsInput(payload)
+  });
+}
+
+export function resetSettings(state) {
+  return withState({
+    ...state,
+    settings: { ...DEFAULT_SETTINGS }
+  });
+}
+
 export function advanceTimer(state) {
   let mission = state.activeMission;
   if (!mission || !RUNNING_MODES.includes(mission.timerMode)) return withState(state);
@@ -441,11 +465,11 @@ export function normalizeMission(mission, task) {
   };
 }
 
-export function validateTaskInput(payload) {
+export function validateTaskInput(payload, defaults = DEFAULT_SETTINGS) {
   const title = String(payload.title || "").trim();
-  const workDurationMinutes = positiveNumber(payload.workDurationMinutes);
-  const restDurationMinutes = positiveNumber(payload.restDurationMinutes);
-  const totalSessions = positiveInteger(payload.totalSessions);
+  const workDurationMinutes = positiveNumber(payload.workDurationMinutes ?? defaults.defaultWorkMinutes);
+  const restDurationMinutes = positiveNumber(payload.restDurationMinutes ?? defaults.defaultRestMinutes);
+  const totalSessions = positiveInteger(payload.totalSessions ?? defaults.defaultTotalSessions);
 
   if (!title) throw new Error("Task title is required.");
   if (!workDurationMinutes) throw new Error("Work duration must be a positive number.");
@@ -460,6 +484,24 @@ export function validateTaskInput(payload) {
     totalSessions,
     softBlockedSites: normalizeSiteList(payload.softBlockedSites),
     hardBlockedSites: normalizeSiteList(payload.hardBlockedSites)
+  };
+}
+
+export function validateSettingsInput(payload = {}) {
+  const defaultWorkMinutes = positiveNumber(payload.defaultWorkMinutes);
+  const defaultRestMinutes = positiveNumber(payload.defaultRestMinutes);
+  const defaultTotalSessions = positiveInteger(payload.defaultTotalSessions);
+
+  if (!defaultWorkMinutes) throw new Error("Default work duration must be a positive number.");
+  if (!defaultRestMinutes) throw new Error("Default rest duration must be a positive number.");
+  if (!defaultTotalSessions) throw new Error("Default total sessions must be a positive whole number.");
+
+  return {
+    defaultWorkMinutes,
+    defaultRestMinutes,
+    defaultTotalSessions,
+    showCompletedTasks: payload.showCompletedTasks !== false,
+    compactMode: payload.compactMode !== false
   };
 }
 
@@ -517,6 +559,17 @@ export function normalizeSiteList(value) {
 
 export function getTodayDateString() {
   return formatLocalDate(new Date());
+}
+
+function normalizeSettings(settings = {}) {
+  try {
+    return validateSettingsInput({
+      ...DEFAULT_SETTINGS,
+      ...settings
+    });
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  }
 }
 
 function saveMission(state, taskId, mission, taskStatus) {

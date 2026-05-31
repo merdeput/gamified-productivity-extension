@@ -2,6 +2,7 @@ import {
   formatSeconds,
   getDisplaySeconds,
   getPeriodSeconds,
+  validateSettingsInput,
   validateTaskInput
 } from "../state.js";
 
@@ -9,6 +10,7 @@ let state = {
   tasks: [],
   activeMission: null,
   lastResult: null,
+  settings: {},
   garden: { seeds: 0 }
 };
 
@@ -37,6 +39,10 @@ function bindEvents() {
 
   $("taskForm").addEventListener("submit", saveTask);
   $("missionForm").addEventListener("submit", saveMissionSettings);
+  $("settingsForm").addEventListener("submit", saveSettings);
+  $("settingsToggleBtn").addEventListener("click", toggleSettingsPanel);
+  $("settingsCloseBtn").addEventListener("click", closeSettingsPanel);
+  $("resetSettingsBtn").addEventListener("click", resetSettings);
   $("cancelEditBtn").addEventListener("click", resetTaskForm);
   $("startMissionBtn").addEventListener("click", () => {
     const taskId = getSelectedTaskId();
@@ -46,7 +52,6 @@ function bindEvents() {
   $("resumeMissionBtn").addEventListener("click", () => sendAction("RESUME_MISSION", null, "Mission resumed."));
   $("finishWorkBtn").addEventListener("click", () => sendAction("FINISH_WORK_SESSION", null, "Work session finished."));
   $("skipRestBtn").addEventListener("click", () => sendAction("SKIP_REST", null, "Rest skipped."));
-  $("completeMissionBtn").addEventListener("click", () => sendAction("COMPLETE_MISSION", null, "Mission completed."));
   $("resetMissionBtn").addEventListener("click", () => {
     const taskId = getSelectedTaskId();
     if (taskId) sendAction("RESET_MISSION", { taskId }, "Mission reset.");
@@ -133,18 +138,60 @@ async function saveMissionSettings(event) {
 
 function buildTaskPayload({ taskId, title, fallbackTask, useTaskFormDeadline }) {
   const mission = fallbackTask?.mission || {};
+  const useAppDefaults = !taskId;
   return {
     taskId,
     title,
     deadlineDate: useTaskFormDeadline
       ? $("deadlineDateInput")?.value || fallbackTask?.deadlineDate || getTodayDateString()
       : fallbackTask?.deadlineDate || getTodayDateString(),
-    workDurationMinutes: Number($("workDurationInput")?.value || mission.workDurationMinutes || 25),
-    restDurationMinutes: Number($("restDurationInput")?.value || mission.restDurationMinutes || 5),
-    totalSessions: Number($("totalSessionsInput")?.value || mission.totalSessions || 4),
-    softBlockedSites: parseSiteText($("softBlockedSitesInput")?.value || fallbackTask?.softBlockedSites?.join(", ") || ""),
-    hardBlockedSites: parseSiteText($("hardBlockedSitesInput")?.value || fallbackTask?.hardBlockedSites?.join(", ") || "")
+    workDurationMinutes: useAppDefaults
+      ? state.settings.defaultWorkMinutes
+      : Number($("workDurationInput")?.value || mission.workDurationMinutes || 25),
+    restDurationMinutes: useAppDefaults
+      ? state.settings.defaultRestMinutes
+      : Number($("restDurationInput")?.value || mission.restDurationMinutes || 5),
+    totalSessions: useAppDefaults
+      ? state.settings.defaultTotalSessions
+      : Number($("totalSessionsInput")?.value || mission.totalSessions || 4),
+    softBlockedSites: useAppDefaults ? [] : parseSiteText($("softBlockedSitesInput")?.value || fallbackTask?.softBlockedSites?.join(", ") || ""),
+    hardBlockedSites: useAppDefaults ? [] : parseSiteText($("hardBlockedSitesInput")?.value || fallbackTask?.hardBlockedSites?.join(", ") || "")
   };
+}
+
+async function saveSettings(event) {
+  event.preventDefault();
+  const payload = {
+    defaultWorkMinutes: Number($("defaultWorkMinutesInput").value),
+    defaultRestMinutes: Number($("defaultRestMinutesInput").value),
+    defaultTotalSessions: Number($("defaultTotalSessionsInput").value),
+    showCompletedTasks: $("showCompletedTasksInput").checked,
+    compactMode: $("compactModeInput").checked
+  };
+
+  const validationError = getSettingsValidationError(payload);
+  if (validationError) {
+    setStatus(validationError);
+    return;
+  }
+
+  await sendAction("UPDATE_SETTINGS", payload, "Settings saved.");
+}
+
+async function resetSettings() {
+  await sendAction("RESET_SETTINGS", null, "Settings reset to defaults.");
+}
+
+function toggleSettingsPanel() {
+  const shouldOpen = $("settingsPanel").classList.contains("hidden");
+  $("settingsPanel").classList.toggle("hidden", !shouldOpen);
+  $("settingsToggleBtn").setAttribute("aria-expanded", String(shouldOpen));
+  if (shouldOpen) loadSettingsForm();
+}
+
+function closeSettingsPanel() {
+  $("settingsPanel").classList.add("hidden");
+  $("settingsToggleBtn").setAttribute("aria-expanded", "false");
 }
 
 async function sendAction(type, payload, successMessage) {
@@ -184,11 +231,13 @@ function render() {
 
 function renderShell() {
   $("seedCount").textContent = state.garden?.seeds || 0;
+  document.body.classList.toggle("compact-mode", state.settings?.compactMode !== false);
+  if (!isEditingSettingsForm()) loadSettingsForm();
 }
 
 function renderTasks() {
   const list = $("taskList");
-  const tasks = state.tasks || [];
+  const tasks = (state.tasks || []).filter((task) => state.settings?.showCompletedTasks !== false || task.status !== "completed");
   $("taskCount").textContent = `${tasks.length} ${tasks.length === 1 ? "task" : "tasks"}`;
   list.innerHTML = "";
 
@@ -355,7 +404,6 @@ function renderTimer(mission) {
   setButtonState("resumeMissionBtn", !isActiveSelected || mission.timerMode !== "paused");
   setButtonState("finishWorkBtn", !isActiveSelected || !(mission.timerMode === "work" || mission.previousTimerMode === "work"));
   setButtonState("skipRestBtn", !isActiveSelected || !(mission.timerMode === "rest" || mission.previousTimerMode === "rest"));
-  setButtonState("completeMissionBtn", !isActiveSelected || mission.timerMode === "completed" || mission.currentSession < mission.totalSessions);
   setButtonState("resetMissionBtn", false);
 }
 
@@ -417,6 +465,15 @@ function loadMissionForm(task) {
   $("totalSessionsInput").value = mission.totalSessions || 4;
   $("softBlockedSitesInput").value = (task.softBlockedSites || mission.softBlockedSites || []).join(", ");
   $("hardBlockedSitesInput").value = (task.hardBlockedSites || mission.hardBlockedSites || []).join(", ");
+}
+
+function loadSettingsForm() {
+  const settings = state.settings || {};
+  $("defaultWorkMinutesInput").value = settings.defaultWorkMinutes ?? 25;
+  $("defaultRestMinutesInput").value = settings.defaultRestMinutes ?? 5;
+  $("defaultTotalSessionsInput").value = settings.defaultTotalSessions ?? 4;
+  $("showCompletedTasksInput").checked = settings.showCompletedTasks !== false;
+  $("compactModeInput").checked = settings.compactMode !== false;
 }
 
 function getBoardDates(tasks) {
@@ -523,6 +580,15 @@ function getValidationError(payload) {
   }
 }
 
+function getSettingsValidationError(payload) {
+  try {
+    validateSettingsInput(payload);
+    return "";
+  } catch (error) {
+    return error.message;
+  }
+}
+
 function parseSiteText(value) {
   return String(value || "")
     .split(/[\n,]/)
@@ -537,6 +603,16 @@ function isEditingMissionForm() {
     $("totalSessionsInput"),
     $("softBlockedSitesInput"),
     $("hardBlockedSitesInput")
+  ].includes(document.activeElement);
+}
+
+function isEditingSettingsForm() {
+  return [
+    $("defaultWorkMinutesInput"),
+    $("defaultRestMinutesInput"),
+    $("defaultTotalSessionsInput"),
+    $("showCompletedTasksInput"),
+    $("compactModeInput")
   ].includes(document.activeElement);
 }
 
