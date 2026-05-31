@@ -1,4 +1,5 @@
-import { DEFAULT_STATE, normalizeState } from "./state.js";
+import { DEFAULT_STATE } from "./constants.js";
+import { normalizeState } from "./utils.js";
 
 export async function ensureState() {
   const stored = await chrome.storage.local.get(DEFAULT_STATE);

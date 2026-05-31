@@ -40,7 +40,7 @@
     <li>The extension action opens a Chrome side panel. The UI file remains <code>popup/popup.html</code> because that folder already existed.</li>
     <li>Kept the implementation in plain HTML, CSS, and JavaScript with no added libraries.</li>
     <li>Refactored into a small number of medium-sized modules instead of many tiny files.</li>
-    <li>Moved mission, timer, reward, model, and placeholder site-list logic into <code>state.js</code>.</li>
+    <li>Split the former <code>state.js</code> module into <code>constants.js</code>, <code>utils.js</code>, and <code>actions.js</code> so static values, stateless helpers, and state transitions have clear boundaries.</li>
     <li>Centralized <code>chrome.storage.local</code> access in <code>storage.js</code>.</li>
     <li>Reduced <code>background.js</code> to Chrome service-worker wiring and message dispatch.</li>
   </ul>
@@ -79,7 +79,9 @@
   <ul>
     <li><code>background.js</code>: Chrome listener setup, side-panel behavior, alarm handling, message routing, and alarm side effects.</li>
     <li><code>storage.js</code>: loads, normalizes, and saves extension state through <code>chrome.storage.local</code>.</li>
-    <li><code>state.js</code>: pure MVP domain logic for tasks, missions, Pomodoro sessions, timer transitions, rewards, garden placeholder seed totals, and blocked-site placeholder arrays.</li>
+    <li><code>constants.js</code>: dependency-free static defaults and timer-mode values only.</li>
+    <li><code>utils.js</code>: stateless helpers, formatting, timer queries, validation, normalization, reward calculation, mission initialization, and placeholder site-list cleanup.</li>
+    <li><code>actions.js</code>: predictable task, mission, timer, scheduling, settings, reward, and garden-seed state transitions.</li>
     <li><code>popup/popup.js</code>: side-panel entrypoint only.</li>
     <li><code>popup/ui.js</code>: compact UI event handling, rendering, form payloads, message calls, and local selected-task UI state.</li>
     <li><code>popup/popup.html</code> and <code>popup/popup.css</code>: side-panel markup and styling.</li>
@@ -87,11 +89,21 @@
 
   <h2>Duplicate Logic Removed</h2>
   <ul>
-    <li>Timer display and period calculations now come from <code>state.js</code> instead of being duplicated in the UI.</li>
-    <li>Task and mission validation now use <code>validateTaskInput</code> from <code>state.js</code> in both the background flow and UI validation.</li>
-    <li>Reward calculation is centralized in <code>state.js</code>.</li>
-    <li>Task/mission normalization and placeholder site-list cleanup are centralized in <code>state.js</code>.</li>
+    <li>Timer display and period calculations now come from <code>utils.js</code> instead of being duplicated in the UI.</li>
+    <li>Task and mission validation now use <code>validateTaskInput</code> from <code>utils.js</code> in both the background flow and UI validation.</li>
+    <li>Reward calculation is centralized in <code>utils.js</code>.</li>
+    <li>Task/mission normalization and placeholder site-list cleanup are centralized in <code>utils.js</code>.</li>
     <li>Storage reads and writes are centralized in <code>storage.js</code>.</li>
+  </ul>
+
+  <h2>State Module Refactor</h2>
+  <ul>
+    <li>Removed the bloated <code>state.js</code> module and replaced it with three focused files.</li>
+    <li>Dependency direction is <code>constants.js</code> to <code>utils.js</code> to <code>actions.js</code> to background/UI consumers.</li>
+    <li><code>constants.js</code> has no imports and contains static values only.</li>
+    <li><code>utils.js</code> has no storage, DOM, Chrome API, or app-state mutation logic.</li>
+    <li><code>actions.js</code> contains functions that accept app state and return normalized state transitions plus existing alarm hints.</li>
+    <li>No task, mission, timer, scheduling, settings, reward, garden placeholder, or blocked-site placeholder behavior was intentionally changed.</li>
   </ul>
 
   <h2>App Settings</h2>
@@ -126,7 +138,7 @@
   <h2>Timer Drift Diagnosis And Fix</h2>
   <ul>
     <li>Diagnosis: the visible countdown is rendered in <code>popup/ui.js</code>, which polls the background once per second with <code>GET_STATE</code>.</li>
-    <li>Diagnosis: the timer state transition logic is centralized in <code>state.js</code>, especially <code>advanceTimer</code>, <code>getRemainingSeconds</code>, and <code>getDisplaySeconds</code>.</li>
+    <li>Diagnosis: timer transitions are centralized in <code>actions.js</code> through <code>advanceTimer</code>, while stateless queries such as <code>getRemainingSeconds</code> and <code>getDisplaySeconds</code> live in <code>utils.js</code>.</li>
     <li>Diagnosis: the timer already stored <code>startedAt</code>, <code>remainingSeconds</code>, and <code>timerMode</code>, and display math used wall-clock time through <code>Date.now()</code>.</li>
     <li>Cause: while the timer was still running, <code>advanceTimer</code> saved the rounded whole-second <code>remainingSeconds</code> and reset <code>startedAt</code> to the current time on every poll.</li>
     <li>Cause: if a poll happened before a full second elapsed, fractional elapsed time was discarded. Repeating that over many ticks made the countdown feel slower than real time.</li>
@@ -152,7 +164,7 @@
   <ul>
     <li>Added <code>deadlineDate</code> to each task using the simple <code>YYYY-MM-DD</code> format.</li>
     <li>New tasks default to the current local date. The date is calculated from the user's local <code>Date</code> object and formatted manually instead of using a hardcoded date or UTC conversion.</li>
-    <li>Existing saved tasks without <code>deadlineDate</code> are normalized to the current local date in <code>state.js</code>, so older task data continues to load.</li>
+    <li>Existing saved tasks without <code>deadlineDate</code> are normalized to the current local date in <code>utils.js</code>, so older task data continues to load.</li>
     <li>The Task screen now renders a compact chronological board with visible date boxes for today and the next four days, plus any other dates already used by saved tasks.</li>
     <li>Empty date boxes remain visible and can accept dropped tasks.</li>
     <li>Task rescheduling uses browser-native drag-and-drop events: <code>dragstart</code>, <code>dragover</code>, <code>dragleave</code>, and <code>drop</code>.</li>
@@ -183,7 +195,10 @@
   <ul>
     <li><code>manifest.json</code>: configured the background service worker as an ES module.</li>
     <li><code>background.js</code>: slimmed down to service-worker entrypoint and message dispatch; added settings action routes.</li>
-    <li><code>state.js</code>: added centralized domain logic and shared helpers; fixed timer drift by preserving the running timer baseline between transitions; added task deadline normalization, rescheduling, settings defaults, settings normalization, and settings actions.</li>
+    <li><code>state.js</code>: removed after its responsibilities were split into the three focused modules below.</li>
+    <li><code>constants.js</code>: added dependency-free static settings, state defaults, and timer-mode constants.</li>
+    <li><code>utils.js</code>: added stateless normalization, validation, timer query, formatting, reward, mission initialization, date, ID, and placeholder site-list helpers.</li>
+    <li><code>actions.js</code>: added task, mission, Pomodoro, scheduling, settings, reward, and garden-seed state transitions.</li>
     <li><code>storage.js</code>: added centralized Chrome storage wrapper.</li>
     <li><code>popup/popup.html</code>: collapsed navigation to Tasks, Mission, and Garden; added the task deadline date input, active mission panel markup, top-right settings button, and compact settings dropdown.</li>
     <li><code>popup/popup.html</code>: changed the side-panel script to an ES module.</li>

@@ -17,7 +17,7 @@ import {
   updateTask,
   updateSettings,
   resetSettings
-} from "./state.js";
+} from "./actions.js";
 
 const MISSION_ALARM = "missionTick";
 

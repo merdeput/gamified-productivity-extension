@@ -1,10 +1,12 @@
 import {
   formatSeconds,
   getDisplaySeconds,
+  getTodayDateString,
   getPeriodSeconds,
+  formatLocalDate,
   validateSettingsInput,
   validateTaskInput
-} from "../state.js";
+} from "../utils.js";
 
 let state = {
   tasks: [],
@@ -500,10 +502,6 @@ function formatDateLabel(dateString) {
   return date.toLocaleDateString(undefined, { weekday: "long" });
 }
 
-function getTodayDateString() {
-  return formatLocalDate(new Date());
-}
-
 function parseLocalDate(dateString) {
   const [year, month, day] = String(dateString).split("-").map(Number);
   return new Date(year, month - 1, day);
@@ -513,13 +511,6 @@ function addDays(date, days) {
   const nextDate = new Date(date);
   nextDate.setDate(nextDate.getDate() + days);
   return nextDate;
-}
-
-function formatLocalDate(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }
 
 function setMissionInputsDisabled(disabled) {
