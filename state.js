@@ -32,6 +32,7 @@ export function createTask(state, payload) {
   const task = {
     id: makeId("task"),
     title: taskInput.title,
+    deadlineDate: taskInput.deadlineDate,
     status: "active",
     createdAt: now,
     updatedAt: now,
@@ -81,6 +82,7 @@ export function updateTask(state, payload) {
     return {
       ...task,
       title: taskInput.title,
+      deadlineDate: taskInput.deadlineDate,
       status: task.status === "completed" ? "completed" : "active",
       updatedAt: Date.now(),
       softBlockedSites: taskInput.softBlockedSites,
@@ -94,6 +96,26 @@ export function updateTask(state, payload) {
     tasks,
     activeMission: state.activeMission?.taskId === taskId ? editableMission : state.activeMission
   });
+}
+
+export function rescheduleTask(state, payload) {
+  const taskId = payload?.taskId;
+  if (!taskId) throw new Error("Task id is required.");
+
+  const existing = state.tasks.find((task) => task.id === taskId);
+  if (!existing) throw new Error("Task not found.");
+
+  const deadlineDate = normalizeDateString(payload.deadlineDate);
+  const tasks = state.tasks.map((task) => {
+    if (task.id !== taskId) return task;
+    return {
+      ...task,
+      deadlineDate,
+      updatedAt: Date.now()
+    };
+  });
+
+  return withState({ ...state, tasks });
 }
 
 export function deleteTask(state, taskId) {
@@ -381,6 +403,7 @@ export function createMission(input) {
 export function normalizeTask(task) {
   const normalized = {
     ...task,
+    deadlineDate: normalizeDateString(task.deadlineDate),
     status: task.status === "completed" ? "completed" : "active",
     softBlockedSites: normalizeSiteList(task.softBlockedSites),
     hardBlockedSites: normalizeSiteList(task.hardBlockedSites)
@@ -431,6 +454,7 @@ export function validateTaskInput(payload) {
 
   return {
     title,
+    deadlineDate: normalizeDateString(payload.deadlineDate),
     workDurationMinutes,
     restDurationMinutes,
     totalSessions,
@@ -491,6 +515,10 @@ export function normalizeSiteList(value) {
     .filter(Boolean);
 }
 
+export function getTodayDateString() {
+  return formatLocalDate(new Date());
+}
+
 function saveMission(state, taskId, mission, taskStatus) {
   const normalized = normalizeMission(mission, null);
   const tasks = state.tasks.map((task) => {
@@ -525,6 +553,19 @@ function positiveNumber(value) {
 function positiveInteger(value) {
   const number = Number(value);
   return Number.isInteger(number) && number > 0 ? number : 0;
+}
+
+function normalizeDateString(value) {
+  const raw = String(value || "").trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  return getTodayDateString();
+}
+
+function formatLocalDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function cleanSite(site) {

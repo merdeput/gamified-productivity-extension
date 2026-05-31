@@ -136,6 +136,30 @@
     <li>Browser screenshot verification could not be run in this session because the in-app browser was unavailable, so validation was limited to source inspection and static checks.</li>
   </ul>
 
+  <h2>Deadline Scheduling And Drag-And-Drop</h2>
+  <ul>
+    <li>Added <code>deadlineDate</code> to each task using the simple <code>YYYY-MM-DD</code> format.</li>
+    <li>New tasks default to the current local date. The date is calculated from the user's local <code>Date</code> object and formatted manually instead of using a hardcoded date or UTC conversion.</li>
+    <li>Existing saved tasks without <code>deadlineDate</code> are normalized to the current local date in <code>state.js</code>, so older task data continues to load.</li>
+    <li>The Task screen now renders a compact chronological board with visible date boxes for today and the next four days, plus any other dates already used by saved tasks.</li>
+    <li>Empty date boxes remain visible and can accept dropped tasks.</li>
+    <li>Task rescheduling uses browser-native drag-and-drop events: <code>dragstart</code>, <code>dragover</code>, <code>dragleave</code>, and <code>drop</code>.</li>
+    <li>Dropping a card sends a focused <code>RESCHEDULE_TASK</code> action that updates only <code>deadlineDate</code>, preserving all task, mission, timer, blocked-site placeholder, and reward data.</li>
+    <li>The existing task actions remain on each card: select/configure, rename, reset, and delete.</li>
+    <li>Task action buttons are hidden by default and appear only on the currently selected task card to keep the board compact.</li>
+    <li>A small date input was added to the task form as a fallback for creating or editing a deadline without dragging.</li>
+    <li>The board uses responsive CSS grid columns so date boxes stack on narrow side panels and spread naturally when there is more width.</li>
+  </ul>
+
+  <h2>Current Active Mission Visibility</h2>
+  <ul>
+    <li>When a task other than the active mission task is selected, the Mission screen now shows a compact <code>Current Active Mission</code> panel above the selected task's mission setup.</li>
+    <li>The panel reads from the existing <code>activeMission</code> state only. No duplicate mission state or second active mission concept was added.</li>
+    <li>The panel shows the active task title, timer mode, session progress, remaining time, and the blocking message that the active mission must be completed or reset before starting another.</li>
+    <li>The panel includes focused actions for viewing the active mission, resetting it, or completing it when completion is already allowed by existing mission rules.</li>
+    <li>The normal selected-task mission setup remains visible, but the Start button is disabled while a different mission is active to make the single-active-mission rule clearer.</li>
+  </ul>
+
   <h2>Blocked Website Placeholders</h2>
   <ul>
     <li>The UI stores soft and hard blocked-site arrays but does not block websites.</li>
@@ -147,13 +171,13 @@
   <ul>
     <li><code>manifest.json</code>: configured the background service worker as an ES module.</li>
     <li><code>background.js</code>: slimmed down to service-worker entrypoint and message dispatch.</li>
-    <li><code>state.js</code>: added centralized domain logic and shared helpers; fixed timer drift by preserving the running timer baseline between transitions.</li>
+    <li><code>state.js</code>: added centralized domain logic and shared helpers; fixed timer drift by preserving the running timer baseline between transitions; added task deadline normalization and rescheduling.</li>
     <li><code>storage.js</code>: added centralized Chrome storage wrapper.</li>
-    <li><code>popup/popup.html</code>: collapsed navigation to Tasks, Mission, and Garden.</li>
+    <li><code>popup/popup.html</code>: collapsed navigation to Tasks, Mission, and Garden; added the task deadline date input and active mission panel markup.</li>
     <li><code>popup/popup.html</code>: changed the side-panel script to an ES module.</li>
     <li><code>popup/popup.js</code>: reduced to the side-panel entrypoint.</li>
-    <li><code>popup/ui.js</code>: added compact UI event handling and rendering; guards against overlapping timer refresh polls.</li>
-    <li><code>popup/popup.css</code>: simplified layout for the compact side-panel UI and made the side panel fluid/responsive.</li>
+    <li><code>popup/ui.js</code>: added compact UI event handling and rendering; guards against overlapping timer refresh polls; renders the deadline board, native drag-and-drop rescheduling, and active mission visibility panel.</li>
+    <li><code>popup/popup.css</code>: simplified layout for the compact side-panel UI, made the side panel fluid/responsive, and added compact date-board and active-mission panel styling.</li>
     <li><code>implementation-notes.html</code>: updated this documentation.</li>
   </ul>
 

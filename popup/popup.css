@@ -223,18 +223,95 @@ textarea {
 
 .task-list {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  align-items: start;
   gap: clamp(0.45rem, 1.5vw, 0.65rem);
   min-width: 0;
 }
 
+.date-column {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: clamp(0.45rem, 1.4vw, 0.65rem);
+  border: 1px solid #ded5c8;
+  border-radius: 8px;
+  background: #fbfaf7;
+}
+
+.date-column-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.date-column-title strong,
+.date-column-title span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.date-column-title span {
+  color: #666;
+  font-size: 11px;
+}
+
+.date-drop-zone {
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+  min-height: 4rem;
+  min-width: 0;
+  border-radius: 7px;
+}
+
+.date-drop-zone.drag-over {
+  outline: 2px dashed #316f4a;
+  outline-offset: 3px;
+  background: #ecf8e5;
+}
+
+.date-empty {
+  display: grid;
+  place-items: center;
+  min-height: 3rem;
+  border: 1px dashed #ded5c8;
+  border-radius: 7px;
+  background: #fffdf9;
+}
+
 .task-item,
 .timer-box,
+.active-mission-panel,
 .garden-placeholder {
   min-width: 0;
   padding: clamp(0.55rem, 1.8vw, 0.75rem);
   border: 1px solid #e3dbcf;
   border-radius: 8px;
   background: #fffdf9;
+}
+
+.active-mission-panel {
+  display: grid;
+  gap: clamp(0.45rem, 1.4vw, 0.65rem);
+  margin-bottom: clamp(0.55rem, 1.8vw, 0.75rem);
+  border-color: #b9d8a6;
+  background: #f7fff1;
+}
+
+.active-mission-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.active-mission-grid strong {
+  color: #28563b;
+  font-size: clamp(1.1rem, 5vw, 1.6rem);
+  font-variant-numeric: tabular-nums;
 }
 
 .task-item.selected {
@@ -248,6 +325,26 @@ textarea {
   font-weight: bold;
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.task-item {
+  cursor: grab;
+}
+
+.task-item:active {
+  cursor: grabbing;
+}
+
+.task-item.dragging {
+  opacity: 0.65;
+}
+
+.task-item button {
+  cursor: pointer;
+}
+
+.task-actions {
+  margin-top: 0.25rem;
 }
 
 .badge,

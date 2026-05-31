@@ -37,6 +37,8 @@
           <input id="taskIdInput" type="hidden" />
           <label for="taskTitleInput">Task title</label>
           <input id="taskTitleInput" type="text" placeholder="Study German vocabulary" required />
+          <label for="deadlineDateInput">Deadline</label>
+          <input id="deadlineDateInput" type="date" />
           <div class="actions">
             <button class="primary" type="submit">Save Task</button>
             <button id="cancelEditBtn" type="button" class="secondary hidden">Cancel</button>
@@ -58,6 +60,26 @@
         </div>
 
         <div id="missionEmpty" class="empty-state">Create or select a task to configure its mission.</div>
+
+        <div id="activeMissionPanel" class="active-mission-panel hidden">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Current Active Mission</p>
+              <h3 id="activeMissionTitle">Untitled task</h3>
+            </div>
+            <span id="activeMissionMode" class="mode-pill">idle</span>
+          </div>
+          <div class="active-mission-grid">
+            <span id="activeMissionSession" class="muted">Session 0 / 0</span>
+            <strong id="activeMissionRemaining">00:00</strong>
+          </div>
+          <p class="muted">Complete or reset this mission before starting another.</p>
+          <div class="actions">
+            <button id="viewActiveMissionBtn" type="button" class="secondary">View Active Mission</button>
+            <button id="completeActiveMissionBtn" type="button" class="primary">Complete Active Mission</button>
+            <button id="resetActiveMissionBtn" type="button" class="danger">Reset Active Mission</button>
+          </div>
+        </div>
 
         <div id="missionContent" class="hidden">
           <div class="mission-head">
@@ -82,9 +104,6 @@
             </div>
 
             <div class="preset-row" aria-label="Work duration presets">
-              <button type="button" data-work-preset="25">25m</button>
-              <button type="button" data-work-preset="45">45m</button>
-              <button type="button" data-work-preset="60">60m</button>
               <button id="saveMissionSettingsBtn" type="submit" class="secondary">Save Settings</button>
             </div>
 

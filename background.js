@@ -7,6 +7,7 @@ import {
   deleteTask,
   finishWorkSession,
   pauseMission,
+  rescheduleTask,
   resetMission,
   resetTask,
   resumeMission,
@@ -56,6 +57,7 @@ async function handleMessage(message) {
   if (type === "CREATE_TASK") return runStateAction((state) => createTask(state, payload));
   if (type === "UPDATE_TASK") return runStateAction((state) => updateTask(state, payload));
   if (type === "DELETE_TASK") return runStateAction((state) => deleteTask(state, payload.taskId));
+  if (type === "RESCHEDULE_TASK") return runStateAction((state) => rescheduleTask(state, payload));
   if (type === "START_MISSION") return runStateAction((state) => startMission(state, payload.taskId));
   if (type === "PAUSE_MISSION") return runStateAction(pauseMission);
   if (type === "RESUME_MISSION") return runStateAction(resumeMission);
