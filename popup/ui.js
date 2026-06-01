@@ -4,6 +4,7 @@ import {
   getTodayDateString,
   getPeriodSeconds,
   formatLocalDate,
+  normalizeDateString,
   validateSettingsInput,
   validateTaskInput
 } from "../utils.js";
@@ -16,7 +17,7 @@ let state = {
   garden: { seeds: 0 }
 };
 
-let selectedTaskId = "";
+let selectedTaskId = null;
 let timerId = null;
 let refreshInFlight = false;
 let refreshQueued = false;
@@ -81,7 +82,7 @@ async function refreshState() {
     setStatus(response.error);
   } else {
     state = response.data;
-    if (!selectedTaskId && state.tasks?.length) selectedTaskId = state.activeMission?.taskId || state.tasks[0].id;
+    reconcileSelectedTask();
     render();
   }
 
@@ -206,8 +207,7 @@ async function sendAction(type, payload, successMessage) {
   }
 
   state = response.data;
-  if (payload?.taskId) selectedTaskId = payload.taskId;
-  if (state.activeMission?.taskId) selectedTaskId = state.activeMission.taskId;
+  reconcileSelectedTask();
   setStatus(successMessage);
   render();
 }
@@ -286,7 +286,7 @@ function createTaskCard(task) {
   const mission = task.mission || {};
   const isSelected = task.id === selectedTaskId;
   const item = document.createElement("article");
-  item.className = `task-item ${isSelected ? "selected" : ""}`;
+  item.className = `task-item ${getTaskDeadlineClass(task)} ${isSelected ? "selected" : ""}`;
   item.draggable = true;
   item.dataset.taskId = task.id;
 
@@ -312,7 +312,7 @@ function createTaskCard(task) {
   item.addEventListener("dragend", () => item.classList.remove("dragging"));
   item.addEventListener("click", (event) => {
     if (event.target.closest("button")) return;
-    selectedTaskId = selectedTaskId === task.id ? "" : task.id;
+    selectedTaskId = selectedTaskId === task.id ? null : task.id;
     render();
   });
 
@@ -403,11 +403,12 @@ function renderTimer(mission) {
   $("missionMeta").textContent = `${mission.currentSession} of ${mission.totalSessions} work sessions completed.`;
 
   setMissionInputsDisabled(isActiveSelected && ["work", "rest", "paused"].includes(mission.timerMode));
-  setButtonState("startMissionBtn", isActiveSelected || hasOtherActiveMission || mission.timerMode === "completed");
-  setButtonState("pauseMissionBtn", !isActiveSelected || !["work", "rest"].includes(mission.timerMode));
-  setButtonState("resumeMissionBtn", !isActiveSelected || mission.timerMode !== "paused");
-  setButtonState("finishWorkBtn", !isActiveSelected || !(mission.timerMode === "work" || mission.previousTimerMode === "work"));
-  setButtonState("skipRestBtn", !isActiveSelected || !(mission.timerMode === "rest" || mission.previousTimerMode === "rest"));
+  setMissionButtonVisibility(mission);
+  setButtonState("startMissionBtn", hasOtherActiveMission);
+  setButtonState("pauseMissionBtn", !isActiveSelected);
+  setButtonState("resumeMissionBtn", !isActiveSelected);
+  setButtonState("finishWorkBtn", !isActiveSelected);
+  setButtonState("skipRestBtn", !isActiveSelected);
   setButtonState("resetMissionBtn", false);
 }
 
@@ -523,7 +524,7 @@ function setMissionInputsDisabled(disabled) {
 }
 
 function getSelectedTask() {
-  return (state.tasks || []).find((task) => task.id === selectedTaskId) || state.tasks?.[0] || null;
+  return (state.tasks || []).find((task) => task.id === selectedTaskId) || null;
 }
 
 function getSelectedTaskId() {
@@ -613,6 +614,36 @@ function isEditingSettingsForm() {
 
 function setButtonState(id, disabled) {
   $(id).disabled = disabled;
+}
+
+function setMissionButtonVisibility(mission) {
+  const visibleButtonsByMode = {
+    idle: ["startMissionBtn"],
+    work: ["pauseMissionBtn", "finishWorkBtn", "resetMissionBtn"],
+    rest: ["pauseMissionBtn", "skipRestBtn", "resetMissionBtn"],
+    paused: ["resumeMissionBtn", "resetMissionBtn"],
+    completed: ["resetMissionBtn"]
+  };
+  const visibleButtons = new Set(visibleButtonsByMode[mission.timerMode] || ["resetMissionBtn"]);
+
+  ["startMissionBtn", "pauseMissionBtn", "resumeMissionBtn", "finishWorkBtn", "skipRestBtn", "resetMissionBtn"].forEach((id) => {
+    $(id).classList.toggle("hidden", !visibleButtons.has(id));
+  });
+}
+
+function reconcileSelectedTask() {
+  if (selectedTaskId && !(state.tasks || []).some((task) => task.id === selectedTaskId)) {
+    selectedTaskId = null;
+  }
+}
+
+function getTaskDeadlineClass(task) {
+  const deadlineDate = normalizeDateString(task.deadlineDate);
+  const today = getTodayDateString();
+
+  if (deadlineDate < today) return "task-card--past";
+  if (deadlineDate === today) return "task-card--today";
+  return "task-card--future";
 }
 
 function setStatus(message) {

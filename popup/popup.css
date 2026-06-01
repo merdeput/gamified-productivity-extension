@@ -363,6 +363,21 @@ textarea {
   box-shadow: 0 0 0 2px rgba(49, 111, 74, 0.14);
 }
 
+.task-card--past {
+  border-color: #dfb2ae;
+  background: #fff7f6;
+}
+
+.task-card--today {
+  border-color: #b9d8a6;
+  background: #f7fff1;
+}
+
+.task-card--future {
+  border-color: #b8cee3;
+  background: #f5faff;
+}
+
 .task-title {
   flex: 1 1 auto;
   margin: 0;
@@ -554,6 +569,21 @@ body.dark-theme .garden-placeholder,
 body.dark-theme .blocking-details {
   border-color: #3c4348;
   background: #1f2427;
+}
+
+body.dark-theme .task-card--past {
+  border-color: #815451;
+  background: #302526;
+}
+
+body.dark-theme .task-card--today {
+  border-color: #4d7e5d;
+  background: #223229;
+}
+
+body.dark-theme .task-card--future {
+  border-color: #4d6b86;
+  background: #222d36;
 }
 
 body.dark-theme .active-mission-panel {
