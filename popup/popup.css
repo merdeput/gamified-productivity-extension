@@ -85,7 +85,7 @@ h3 {
   font-size: 12px;
 }
 
-.seed-pill {
+.coin-pill {
   display: grid;
   place-items: center;
   min-width: max-content;
@@ -96,7 +96,7 @@ h3 {
   font-weight: bold;
 }
 
-.seed-pill span:last-child {
+.coin-pill span:last-child {
   font-size: 11px;
   font-weight: normal;
 }
@@ -519,4 +519,148 @@ body:not(.compact-mode) .screen.active {
   .timer-actions button {
     flex-basis: 100%;
   }
+}
+
+/* Garden Styles */
+.garden-container {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  border: 1px solid #ded5c8;
+  border-radius: 8px;
+  background: #fffdf9;
+  overflow: hidden;
+  margin-bottom: clamp(0.55rem, 1.8vw, 0.75rem);
+}
+
+.garden-container.hidden {
+  display: none;
+}
+
+.map-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.plant-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.map-tile {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  background-repeat: no-repeat;
+}
+
+.plantable-tile {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.plantable-tile:hover {
+  background-color: rgba(176, 220, 164, 0.3);
+}
+
+.plant-sprite {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  pointer-events: auto;
+  cursor: grab;
+}
+
+.garden-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 480px;
+  color: #666;
+  font-size: 14px;
+  border: 1px solid #ded5c8;
+  border-radius: 8px;
+  background: #fffdf9;
+}
+
+.garden-loading.hidden {
+  display: none;
+}
+
+.flower-store {
+  padding: clamp(0.6rem, 2vw, 0.85rem);
+  border: 1px solid #b9d8a6;
+  border-radius: 8px;
+  background: #f0fde9;
+  margin-bottom: clamp(0.55rem, 1.8vw, 0.75rem);
+}
+
+.flower-store.hidden {
+  display: none;
+}
+
+.flower-store p {
+  margin-bottom: 0.6rem;
+  font-size: 12px;
+  font-weight: bold;
+  color: #333;
+}
+
+.flower-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr));
+  gap: 0.5rem;
+}
+
+.flower-option {
+  padding: 0.5rem;
+  border: 2px solid #c7e3b8;
+  background: white;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: auto;
+}
+
+.flower-option:hover {
+  border-color: #316f4a;
+  box-shadow: 0 2px 6px rgba(49, 111, 74, 0.15);
+}
+
+.flower-option.selected {
+  border-color: #316f4a;
+  background: #ecf8e5;
+  color: #28563b;
+  box-shadow: 0 0 0 2px rgba(49, 111, 74, 0.2);
+}
+
+.flower-preview {
+  width: 32px;
+  height: 16px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.flower-label {
+  text-align: center;
+  font-size: 11px;
+  line-height: 1.2;
 }

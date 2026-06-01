@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Focus Garden",
   "version": "0.3.2",
-  "description": "Create focus tasks, run timed missions, earn seeds, and view garden progress placeholders.",
+  "description": "Create focus tasks, run timed missions, earn coins, and grow a garden.",
   "permissions": ["storage", "alarms", "sidePanel"],
   "action": {
     "default_title": "Focus Garden"

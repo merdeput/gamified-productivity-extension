@@ -14,9 +14,9 @@
         <p>Tasks, missions, seeds</p>
       </div>
       <div class="topbar-actions">
-        <div class="seed-pill">
-          <span id="seedCount">0</span>
-          <span>seeds</span>
+        <div class="coin-pill">
+          <span id="coinCount">0</span>
+          <span>coins</span>
         </div>
         <button id="settingsToggleBtn" class="icon-button" type="button" aria-label="Settings" aria-expanded="false" title="Settings">&#9881;</button>
       </div>
@@ -180,10 +180,22 @@
 
     <section id="gardenScreen" class="screen">
       <div class="panel compact">
-        <h2>Garden Placeholder</h2>
-        <div class="garden-placeholder">
-          <strong id="gardenSeeds">0 seeds</strong>
-          <p>The garden is still a placeholder. Mission rewards are saved as seeds for a future garden system.</p>
+        <div class="panel-header">
+          <h2>Garden</h2>
+          <span id="gardenCoins" class="muted"> </span>
+        </div>
+        <div id="gardenContainer" class="garden-container hidden">
+          <div id="mapLayer" class="map-layer"></div>
+          <div id="plantLayer" class="plant-layer"></div>
+        </div>
+        <div id="gardenLoading" class="garden-loading">Loading garden...</div>
+        <div id="flowerStore" class="flower-store hidden">
+          <p class="muted">Choose a flower:</p>
+          <div class="flower-options"></div>
+        </div>
+        <div id="gardenActions" class="actions hidden">
+          <button id="plantTestRoseBtn" type="button" class="secondary">Plant a Flower</button>
+          <p class="muted" id="gardenInfo"></p>
         </div>
       </div>
     </section>

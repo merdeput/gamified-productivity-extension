@@ -116,11 +116,11 @@
         {
          "columns":26,
          "firstgid":1,
-         "image":"..\/map1\/Tilesets and props Demo.png",
+         "image":"tilesets/Basic_Garden.png",
          "imageheight":672,
          "imagewidth":832,
          "margin":0,
-         "name":"Tilesets and props Demo",
+         "name":"Basic_Garden",
          "spacing":0,
          "tilecount":546,
          "tileheight":32,

@@ -12,9 +12,10 @@ export const DEFAULT_STATE = {
   lastResult: null,
   settings: { ...DEFAULT_SETTINGS },
   garden: {
-    seeds: 0,
-    placeholderNote: "Garden visuals are intentionally stubbed for the MVP."
-  }
+    plants: [],
+    coins: 0
+  },
+  totalFocusMinutes: 0
 };
 
 export const RUNNING_MODES = ["work", "rest"];
