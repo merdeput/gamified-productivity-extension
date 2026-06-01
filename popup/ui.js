@@ -168,7 +168,8 @@ async function saveSettings(event) {
     defaultRestMinutes: Number($("defaultRestMinutesInput").value),
     defaultTotalSessions: Number($("defaultTotalSessionsInput").value),
     showCompletedTasks: $("showCompletedTasksInput").checked,
-    compactMode: $("compactModeInput").checked
+    compactMode: $("compactModeInput").checked,
+    theme: $("themeInput").value
   };
 
   const validationError = getSettingsValidationError(payload);
@@ -234,6 +235,7 @@ function render() {
 function renderShell() {
   $("seedCount").textContent = state.garden?.seeds || 0;
   document.body.classList.toggle("compact-mode", state.settings?.compactMode !== false);
+  document.body.classList.toggle("dark-theme", state.settings?.theme === "dark");
   if (!isEditingSettingsForm()) loadSettingsForm();
 }
 
@@ -476,6 +478,7 @@ function loadSettingsForm() {
   $("defaultTotalSessionsInput").value = settings.defaultTotalSessions ?? 4;
   $("showCompletedTasksInput").checked = settings.showCompletedTasks !== false;
   $("compactModeInput").checked = settings.compactMode !== false;
+  $("themeInput").value = settings.theme === "dark" ? "dark" : "light";
 }
 
 function getBoardDates(tasks) {
@@ -603,7 +606,8 @@ function isEditingSettingsForm() {
     $("defaultRestMinutesInput"),
     $("defaultTotalSessionsInput"),
     $("showCompletedTasksInput"),
-    $("compactModeInput")
+    $("compactModeInput"),
+    $("themeInput")
   ].includes(document.activeElement);
 }
 

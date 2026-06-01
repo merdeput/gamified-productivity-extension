@@ -197,7 +197,8 @@ export function validateSettingsInput(payload = {}) {
     defaultRestMinutes,
     defaultTotalSessions,
     showCompletedTasks: payload.showCompletedTasks !== false,
-    compactMode: payload.compactMode !== false
+    compactMode: payload.compactMode !== false,
+    theme: payload.theme === "dark" ? "dark" : "light"
   };
 }
 

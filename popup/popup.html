@@ -3,15 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Focus Garden MVP</title>
+  <title>Fokus</title>
   <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
   <main class="app">
     <header class="topbar">
       <div>
-        <h1>Focus Garden</h1>
-        <p>Tasks, missions, seeds</p>
+        <h1>FOKUS</h1>
       </div>
       <div class="topbar-actions">
         <div class="seed-pill">
@@ -49,6 +48,13 @@
         <label class="toggle-row">
           <input id="compactModeInput" type="checkbox" />
           <span>Compact mode</span>
+        </label>
+        <label>
+          Theme
+          <select id="themeInput">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
         </label>
         <div class="actions">
           <button class="primary" type="submit">Save</button>

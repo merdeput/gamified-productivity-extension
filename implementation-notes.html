@@ -110,12 +110,13 @@
   <ul>
     <li>Added a compact gear button in the top-right of the side panel. It toggles an inline settings dropdown instead of opening a separate settings screen.</li>
     <li>Settings are persisted inside the existing root state object under <code>settings</code> through <code>chrome.storage.local</code>.</li>
-    <li>Default settings are <code>defaultWorkMinutes: 25</code>, <code>defaultRestMinutes: 5</code>, <code>defaultTotalSessions: 4</code>, <code>showCompletedTasks: true</code>, and <code>compactMode: true</code>.</li>
+    <li>Default settings are <code>defaultWorkMinutes: 25</code>, <code>defaultRestMinutes: 5</code>, <code>defaultTotalSessions: 4</code>, <code>showCompletedTasks: true</code>, <code>compactMode: true</code>, and <code>theme: "light"</code>.</li>
     <li>New tasks and their new mission objects use the configured work, rest, and session defaults.</li>
     <li>Changing settings does not overwrite existing tasks, existing mission configuration, active mission timers, deadline scheduling, rewards, or garden seeds.</li>
     <li>Reset Settings restores only the settings object. It does not delete or reset tasks or missions.</li>
     <li><code>showCompletedTasks</code> filters completed task cards from the task board without deleting them.</li>
     <li><code>compactMode</code> adjusts layout density only.</li>
+    <li><code>theme</code> supports <code>light</code> and <code>dark</code>. The dark theme changes presentation only and does not alter task or mission state.</li>
   </ul>
 
   <h2>Assumptions</h2>
@@ -200,11 +201,11 @@
     <li><code>utils.js</code>: added stateless normalization, validation, timer query, formatting, reward, mission initialization, date, ID, and placeholder site-list helpers.</li>
     <li><code>actions.js</code>: added task, mission, Pomodoro, scheduling, settings, reward, and garden-seed state transitions.</li>
     <li><code>storage.js</code>: added centralized Chrome storage wrapper.</li>
-    <li><code>popup/popup.html</code>: collapsed navigation to Tasks, Mission, and Garden; added the task deadline date input, active mission panel markup, top-right settings button, and compact settings dropdown.</li>
+    <li><code>popup/popup.html</code>: collapsed navigation to Tasks, Mission, and Garden; added the task deadline date input, active mission panel markup, top-right settings button, compact settings dropdown, and theme selector.</li>
     <li><code>popup/popup.html</code>: changed the side-panel script to an ES module.</li>
     <li><code>popup/popup.js</code>: reduced to the side-panel entrypoint.</li>
-    <li><code>popup/ui.js</code>: added compact UI event handling and rendering; guards against overlapping timer refresh polls; renders the deadline board, native drag-and-drop rescheduling, active mission visibility panel, and persisted settings behavior.</li>
-    <li><code>popup/popup.css</code>: simplified layout for the compact side-panel UI, made the side panel fluid/responsive, and added compact date-board, active-mission panel, and settings dropdown styling.</li>
+    <li><code>popup/ui.js</code>: added compact UI event handling and rendering; guards against overlapping timer refresh polls; renders the deadline board, native drag-and-drop rescheduling, active mission visibility panel, persisted settings behavior, and theme class.</li>
+    <li><code>popup/popup.css</code>: simplified layout for the compact side-panel UI, made the side panel fluid/responsive, and added compact date-board, active-mission panel, settings dropdown, and dark-theme styling.</li>
     <li><code>implementation-notes.html</code>: updated this documentation.</li>
   </ul>
 

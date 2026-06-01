@@ -3,7 +3,8 @@ export const DEFAULT_SETTINGS = {
   defaultRestMinutes: 5,
   defaultTotalSessions: 4,
   showCompletedTasks: true,
-  compactMode: true
+  compactMode: true,
+  theme: "light"
 };
 
 export const DEFAULT_STATE = {
