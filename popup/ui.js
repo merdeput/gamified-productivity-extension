@@ -8,16 +8,19 @@ import {
   validateSettingsInput,
   validateTaskInput
 } from "../utils.js";
+import { initGarden, refreshGarden } from "./garden/garden.js";
 
 let state = {
   tasks: [],
   activeMission: null,
   lastResult: null,
   settings: {},
-  garden: { seeds: 0 }
+  garden: { plants: [], coins: 0 },
+  totalFocusMinutes: 0
 };
 
-let selectedTaskId = null;
+let gardenController = null;
+let selectedTaskId = "";
 let timerId = null;
 let refreshInFlight = false;
 let refreshQueued = false;
@@ -233,7 +236,7 @@ function render() {
 }
 
 function renderShell() {
-  $("seedCount").textContent = state.garden?.seeds || 0;
+  $("coinCount").textContent = state.garden?.coins || 0;
   document.body.classList.toggle("compact-mode", state.settings?.compactMode !== false);
   document.body.classList.toggle("dark-theme", state.settings?.theme === "dark");
   if (!isEditingSettingsForm()) loadSettingsForm();
@@ -437,12 +440,39 @@ function renderRewardNotice(mission) {
   }
 
   rewardNotice.classList.remove("hidden");
-  rewardNotice.textContent = `Mission complete! You earned ${result.seedsEarned} garden points.`;
+  rewardNotice.textContent = `Mission complete! You earned ${result.coinsEarned || result.seedsEarned || 0} coins.`;
 }
 
 function renderGardenPlaceholder() {
-  const seeds = state.garden?.seeds || 0;
-  $("gardenSeeds").textContent = `${seeds} ${seeds === 1 ? "seed" : "seeds"}`;
+  const coins = state.garden?.coins || 0;
+
+  const gardenScreen = $("gardenScreen");
+
+  if (gardenScreen) {
+    const coinsEl = gardenScreen.querySelector("#gardenCoins");
+
+    if (coinsEl) {
+      coinsEl.textContent = `${coins} coin${coins === 1 ? "" : "s"}`;
+    }
+  }
+
+  if (gardenController === null) {
+    initGardenView(gardenScreen);
+  } else if (gardenController) {
+    gardenController
+      .refresh(state)
+      .catch(err => console.warn("Failed to refresh garden:", err));
+  }
+}
+
+async function initGardenView(gardenScreen) {
+  if (!gardenScreen || gardenController !== null) return;
+  try {
+    gardenController = await initGarden(gardenScreen, state);
+  } catch (error) {
+    console.error('Failed to initialize garden:', error);
+    gardenController = null;
+  }
 }
 
 function editTask(task) {
@@ -564,6 +594,16 @@ function showScreen(screenId) {
   document.querySelectorAll(".tab").forEach((button) => {
     button.classList.toggle("active", button.dataset.screen === screenId);
   });
+  
+  // Initialize garden when showing garden screen
+  if (screenId === "gardenScreen") {
+    const gardenScreen = $("gardenScreen");
+    if (gardenScreen && gardenController === null) {
+      initGardenView(gardenScreen).catch(err => console.error('Failed to initialize garden:', err));
+    } else if (gardenController) {
+      gardenController.refresh(state).catch(err => console.warn('Failed to refresh garden:', err));
+    }
+  }
 }
 
 function getValidationError(payload) {

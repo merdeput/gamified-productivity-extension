@@ -105,10 +105,10 @@ export function normalizeState(stored = {}) {
     garden: {
       ...DEFAULT_STATE.garden,
       ...(stored.garden || {})
-    }
+    },
+    totalFocusMinutes: Math.max(0, Number(stored.totalFocusMinutes || 0))
   };
 }
-
 export function normalizeTask(task) {
   const normalized = {
     ...task,
@@ -205,7 +205,7 @@ export function validateSettingsInput(payload = {}) {
 export function calculateReward(mission) {
   const workMinutes = mission.totalSessions * mission.workDurationMinutes;
   return {
-    seedsEarned: Math.round(workMinutes * 0.8) + 10,
+    coinsEarned: Math.round(workMinutes * 0.8) + 10,
     focusScore: 100
   };
 }

@@ -183,19 +183,29 @@ export function finishWorkSession(state) {
   }
 
   const completedSessions = mission.currentSession + 1;
+  const workMinutes = mission.workDurationMinutes;
+  const currentFocusMinutes = state.totalFocusMinutes || 0;
+  
   if (completedSessions >= mission.totalSessions) {
-    return completeMission(state, { missionOverride: { ...mission, currentSession: completedSessions } });
+    return completeMission(state, { 
+      missionOverride: { ...mission, currentSession: completedSessions },
+      focusMinutesAdded: workMinutes,
+      currentFocusMinutes
+    });
   }
 
   return withState(
-    saveMission(state, mission.taskId, {
-      ...mission,
-      currentSession: completedSessions,
-      timerMode: "rest",
-      previousTimerMode: null,
-      remainingSeconds: minutesToSeconds(mission.restDurationMinutes),
-      startedAt: Date.now()
-    }, "active"),
+    {
+      ...saveMission(state, mission.taskId, {
+        ...mission,
+        currentSession: completedSessions,
+        timerMode: "rest",
+        previousTimerMode: null,
+        remainingSeconds: minutesToSeconds(mission.restDurationMinutes),
+        startedAt: Date.now()
+      }, "active"),
+      totalFocusMinutes: currentFocusMinutes + workMinutes
+    },
     "start"
   );
 }
@@ -277,7 +287,7 @@ export function completeMission(state, options = {}) {
   }
 
   const alreadyRewarded = Boolean(mission.rewardClaimed);
-  const reward = alreadyRewarded ? { seedsEarned: 0, focusScore: 100 } : calculateReward(mission);
+  const reward = alreadyRewarded ? { coinsEarned: 0, focusScore: 100 } : calculateReward(mission);
   const completedAt = Date.now();
   const completedMission = {
     ...mission,
@@ -295,10 +305,14 @@ export function completeMission(state, options = {}) {
     return { ...task, status: "completed", mission: completedMission };
   });
 
+  // Add focus minutes if provided
+  const totalFocusMinutes = (state.totalFocusMinutes || 0) + (options.focusMinutesAdded || 0);
+
   return withState({
     ...state,
     tasks,
     activeMission: null,
+    totalFocusMinutes,
     lastResult: {
       id: makeId("result"),
       missionId: completedMission.id,
@@ -309,15 +323,14 @@ export function completeMission(state, options = {}) {
       totalSessions: completedMission.totalSessions,
       workDurationMinutes: completedMission.workDurationMinutes,
       restDurationMinutes: completedMission.restDurationMinutes,
-      seedsEarned: reward.seedsEarned,
+      coinsEarned: reward.coinsEarned,
       focusScore: reward.focusScore,
       completedAt,
       note: alreadyRewarded ? "Mission was already rewarded." : "Reward granted once for completed planned sessions."
     },
     garden: {
-      ...DEFAULT_STATE.garden,
-      ...(state.garden || {}),
-      seeds: Math.max(0, Number(state.garden?.seeds || 0) + reward.seedsEarned)
+      plants: state.garden?.plants || [],
+      coins: Math.max(0, Number(state.garden?.coins || 0) + reward.coinsEarned)
     }
   }, "clear");
 }
@@ -352,18 +365,28 @@ export function advanceTimer(state) {
 
   if (mission.timerMode === "work") {
     const completedSessions = mission.currentSession + 1;
+    const workMinutes = mission.workDurationMinutes;
+    const currentFocusMinutes = state.totalFocusMinutes || 0;
+    
     if (completedSessions >= mission.totalSessions) {
-      return completeMission(state, { missionOverride: { ...mission, currentSession: completedSessions } });
+      return completeMission(state, { 
+        missionOverride: { ...mission, currentSession: completedSessions },
+        focusMinutesAdded: workMinutes,
+        currentFocusMinutes
+      });
     }
 
     return withState(
-      saveMission(state, mission.taskId, {
-        ...mission,
-        currentSession: completedSessions,
-        timerMode: "rest",
-        remainingSeconds: minutesToSeconds(mission.restDurationMinutes),
-        startedAt: Date.now()
-      }, "active"),
+      {
+        ...saveMission(state, mission.taskId, {
+          ...mission,
+          currentSession: completedSessions,
+          timerMode: "rest",
+          remainingSeconds: minutesToSeconds(mission.restDurationMinutes),
+          startedAt: Date.now()
+        }, "active"),
+        totalFocusMinutes: currentFocusMinutes + workMinutes
+      },
       "start"
     );
   }
