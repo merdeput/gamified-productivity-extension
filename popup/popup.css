@@ -190,6 +190,33 @@ textarea:disabled {
   min-height: 1rem;
 }
 
+.audio-settings {
+  display: grid;
+  gap: 4px;
+}
+
+.audio-settings label,
+.audio-settings-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.audio-settings label {
+  justify-content: space-between;
+}
+
+.audio-settings-row input[type="range"] {
+  flex: 1 1 auto;
+  min-height: 2.15rem;
+  padding: 0;
+  accent-color: #316f4a;
+}
+
+.audio-settings-row button {
+  flex: 0 0 auto;
+}
+
 .screen.active {
   display: grid;
   gap: clamp(0.55rem, 1.8vw, 0.75rem);
@@ -479,6 +506,17 @@ progress {
   font-weight: bold;
 }
 
+.session-alert {
+  margin-top: 8px;
+  padding: clamp(0.5rem, 1.6vw, 0.7rem);
+  border: 1px solid #b8cfdf;
+  border-radius: 8px;
+  background: #eef7fc;
+  color: #315c73;
+  font-size: 13px;
+  font-weight: bold;
+}
+
 .status {
   flex: 0 0 auto;
   min-height: 1.2rem;
@@ -559,6 +597,12 @@ body.dark-theme .reward-notice {
   border-color: #4d7e5d;
   background: #263b2d;
   color: #bde2c7;
+}
+
+body.dark-theme .session-alert {
+  border-color: #4c7185;
+  background: #22333c;
+  color: #bcdceb;
 }
 
 body.dark-theme .date-column,

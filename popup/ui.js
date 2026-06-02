@@ -10,10 +10,15 @@ import {
 } from "../utils.js";
 import { initGarden, refreshGarden } from "./garden/garden.js";
 
+const SESSION_AUDIO_PATH = "assets/audios/end-of-session.mp3";
+const AUDIO_ALERT_MAX_AGE_MS = 15000;
+
 let state = {
   tasks: [],
   activeMission: null,
   lastResult: null,
+  sessionAlert: null,
+  audioPlayedKeys: [],
   settings: {},
   garden: { plants: [], coins: 0 },
   totalFocusMinutes: 0
@@ -24,6 +29,8 @@ let selectedTaskId = "";
 let timerId = null;
 let refreshInFlight = false;
 let refreshQueued = false;
+const attemptedAudioKeys = new Set();
+let previewAudio = null;
 
 const $ = (id) => document.getElementById(id);
 
@@ -49,6 +56,8 @@ function bindEvents() {
   $("settingsToggleBtn").addEventListener("click", toggleSettingsPanel);
   $("settingsCloseBtn").addEventListener("click", closeSettingsPanel);
   $("resetSettingsBtn").addEventListener("click", resetSettings);
+  $("audioVolumeInput").addEventListener("input", renderAudioVolumeValue);
+  $("testAudioBtn").addEventListener("click", testAudio);
   $("cancelEditBtn").addEventListener("click", resetTaskForm);
   $("startMissionBtn").addEventListener("click", () => {
     const taskId = getSelectedTaskId();
@@ -86,6 +95,7 @@ async function refreshState() {
   } else {
     state = response.data;
     reconcileSelectedTask();
+    void processSessionAudioAlert();
     render();
   }
 
@@ -173,7 +183,8 @@ async function saveSettings(event) {
     defaultTotalSessions: Number($("defaultTotalSessionsInput").value),
     showCompletedTasks: $("showCompletedTasksInput").checked,
     compactMode: $("compactModeInput").checked,
-    theme: $("themeInput").value
+    theme: $("themeInput").value,
+    audioVolume: Number($("audioVolumeInput").value)
   };
 
   const validationError = getSettingsValidationError(payload);
@@ -212,6 +223,7 @@ async function sendAction(type, payload, successMessage) {
 
   state = response.data;
   reconcileSelectedTask();
+  void processSessionAudioAlert();
   setStatus(successMessage);
   render();
 }
@@ -386,6 +398,7 @@ function renderMission() {
   }
 
   renderTimer(mission);
+  renderSessionAlertNotice(mission);
   renderRewardNotice(mission);
 }
 
@@ -442,6 +455,44 @@ function renderRewardNotice(mission) {
 
   rewardNotice.classList.remove("hidden");
   rewardNotice.textContent = `Mission complete! You earned ${result.coinsEarned || result.seedsEarned || 0} coins.`;
+}
+
+function renderSessionAlertNotice(mission) {
+  const alert = state.sessionAlert;
+  const notice = $("sessionAlertNotice");
+
+  if (!alert || alert.taskId !== mission.taskId) {
+    notice.classList.add("hidden");
+    notice.textContent = "";
+    return;
+  }
+
+  notice.classList.remove("hidden");
+  notice.textContent = alert.message;
+}
+
+async function processSessionAudioAlert() {
+  const alert = state.sessionAlert;
+  if (!alert?.key) return;
+  if ((state.audioPlayedKeys || []).includes(alert.key) || attemptedAudioKeys.has(alert.key)) return;
+
+  attemptedAudioKeys.add(alert.key);
+
+  if (Date.now() - Number(alert.createdAt || 0) <= AUDIO_ALERT_MAX_AGE_MS) {
+    try {
+      const audio = new Audio(chrome.runtime.getURL(SESSION_AUDIO_PATH));
+      audio.volume = getAudioVolume();
+      await audio.play();
+    } catch {
+      setStatus(`${alert.message} Audio notification was blocked by the browser.`);
+    }
+  }
+
+  const response = await sendMessage({ type: "ACK_SESSION_AUDIO", payload: { key: alert.key } });
+  if (response.ok) {
+    state = response.data;
+    render();
+  }
 }
 
 function renderGardenPlaceholder() {
@@ -511,6 +562,29 @@ function loadSettingsForm() {
   $("showCompletedTasksInput").checked = settings.showCompletedTasks !== false;
   $("compactModeInput").checked = settings.compactMode !== false;
   $("themeInput").value = settings.theme === "dark" ? "dark" : "light";
+  $("audioVolumeInput").value = settings.audioVolume ?? 100;
+  renderAudioVolumeValue();
+}
+
+function renderAudioVolumeValue() {
+  $("audioVolumeValue").textContent = `${$("audioVolumeInput").value}%`;
+}
+
+async function testAudio() {
+  try {
+    previewAudio?.pause();
+    previewAudio = new Audio(chrome.runtime.getURL(SESSION_AUDIO_PATH));
+    previewAudio.volume = getAudioVolume($("audioVolumeInput").value);
+    await previewAudio.play();
+    setStatus("Playing audio preview.");
+  } catch {
+    setStatus("Audio preview was blocked by the browser.");
+  }
+}
+
+function getAudioVolume(value = state.settings?.audioVolume) {
+  const volume = Number(value);
+  return Number.isFinite(volume) ? Math.min(100, Math.max(0, volume)) / 100 : 1;
 }
 
 function getBoardDates(tasks) {
@@ -649,7 +723,9 @@ function isEditingSettingsForm() {
     $("defaultTotalSessionsInput"),
     $("showCompletedTasksInput"),
     $("compactModeInput"),
-    $("themeInput")
+    $("themeInput"),
+    $("audioVolumeInput"),
+    $("testAudioBtn")
   ].includes(document.activeElement);
 }
 

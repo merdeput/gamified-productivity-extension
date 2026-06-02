@@ -1,6 +1,7 @@
 import { ensureState, getState, saveState } from "./storage.js";
 import {
   advanceTimer,
+  acknowledgeSessionAudio,
   clearResult,
   completeMission,
   createTask,
@@ -72,6 +73,7 @@ async function handleMessage(message) {
   if (type === "CLEAR_RESULT") return runStateAction(clearResult);
   if (type === "UPDATE_SETTINGS") return runStateAction((state) => updateSettings(state, payload));
   if (type === "RESET_SETTINGS") return runStateAction(resetSettings);
+  if (type === "ACK_SESSION_AUDIO") return runStateAction((state) => acknowledgeSessionAudio(state, payload.key));
 
   throw new Error(`Unknown message type: ${type}`);
 }

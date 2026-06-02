@@ -4,13 +4,16 @@ export const DEFAULT_SETTINGS = {
   defaultTotalSessions: 2,
   showCompletedTasks: true,
   compactMode: true,
-  theme: "dark"
+  theme: "dark",
+  audioVolume: 100
 };
 
 export const DEFAULT_STATE = {
   tasks: [],
   activeMission: null,
   lastResult: null,
+  sessionAlert: null,
+  audioPlayedKeys: [],
   settings: { ...DEFAULT_SETTINGS },
   garden: {
     plants: [],

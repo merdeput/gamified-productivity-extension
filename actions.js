@@ -131,7 +131,7 @@ export function startMission(state, taskId) {
   }
 
   return withState(
-    saveMission(state, taskId, {
+    saveMission({ ...state, sessionAlert: null }, taskId, {
       ...mission,
       status: "running",
       timerMode: "work",
@@ -272,7 +272,7 @@ export function resetMission(state, taskId) {
     return { ...item, status: "active", mission };
   });
 
-  return withState({ ...state, tasks, activeMission, lastResult: null }, activeMission ? null : "clear");
+  return withState({ ...state, tasks, activeMission, lastResult: null, sessionAlert: null }, activeMission ? null : "clear");
 }
 
 export function resetTask(state, taskId) {
@@ -339,6 +339,13 @@ export function clearResult(state) {
   return withState({ ...state, lastResult: null });
 }
 
+export function acknowledgeSessionAudio(state, key) {
+  if (!key) return withState(state);
+
+  const audioPlayedKeys = [...new Set([...(state.audioPlayedKeys || []), key])].slice(-50);
+  return withState({ ...state, audioPlayedKeys });
+}
+
 export function updateSettings(state, payload) {
   return withState({
     ...state,
@@ -367,9 +374,18 @@ export function advanceTimer(state) {
     const completedSessions = mission.currentSession + 1;
     const workMinutes = mission.workDurationMinutes;
     const currentFocusMinutes = state.totalFocusMinutes || 0;
+    const alertState = withSessionAlert(
+      state,
+      mission,
+      "work",
+      completedSessions,
+      completedSessions >= mission.totalSessions
+        ? "Work session finished. Mission complete."
+        : "Work session finished. Rest started."
+    );
     
     if (completedSessions >= mission.totalSessions) {
-      return completeMission(state, { 
+      return completeMission(alertState, {
         missionOverride: { ...mission, currentSession: completedSessions },
         focusMinutesAdded: workMinutes,
         currentFocusMinutes
@@ -378,7 +394,7 @@ export function advanceTimer(state) {
 
     return withState(
       {
-        ...saveMission(state, mission.taskId, {
+        ...saveMission(alertState, mission.taskId, {
           ...mission,
           currentSession: completedSessions,
           timerMode: "rest",
@@ -391,8 +407,16 @@ export function advanceTimer(state) {
     );
   }
 
+  const alertState = withSessionAlert(
+    state,
+    mission,
+    "rest",
+    mission.currentSession,
+    "Rest finished. Next work session started."
+  );
+
   return withState(
-    saveMission(state, mission.taskId, {
+    saveMission(alertState, mission.taskId, {
       ...mission,
       timerMode: "work",
       remainingSeconds: minutesToSeconds(mission.workDurationMinutes),
@@ -422,6 +446,21 @@ function getActiveMissionOrThrow(state) {
   const mission = state.activeMission;
   if (!mission) throw new Error("There is no active mission.");
   return normalizeMission(mission, null);
+}
+
+function withSessionAlert(state, mission, phase, sessionNumber, message) {
+  return {
+    ...state,
+    sessionAlert: {
+      key: `${mission.id}:${sessionNumber}:${phase}_audio_played`,
+      missionId: mission.id,
+      taskId: mission.taskId,
+      phase,
+      sessionNumber,
+      message,
+      createdAt: Date.now()
+    }
+  };
 }
 
 function withState(state, alarm = null) {

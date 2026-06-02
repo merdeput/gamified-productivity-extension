@@ -56,6 +56,16 @@
             <option value="dark">Dark</option>
           </select>
         </label>
+        <div class="audio-settings">
+          <label for="audioVolumeInput">
+            Audio volume
+            <span id="audioVolumeValue" class="muted">100%</span>
+          </label>
+          <div class="audio-settings-row">
+            <input id="audioVolumeInput" type="range" min="0" max="100" step="1" value="100" />
+            <button id="testAudioBtn" type="button" class="secondary">Play Audio</button>
+          </div>
+        </div>
         <div class="actions">
           <button class="primary" type="submit">Save</button>
           <button id="resetSettingsBtn" type="button" class="secondary">Reset Defaults</button>
@@ -169,6 +179,7 @@
             <div id="timerDisplay" class="timer">00:00</div>
             <progress id="missionProgress" max="100" value="0"></progress>
             <p id="missionMeta" class="muted"></p>
+            <div id="sessionAlertNotice" class="session-alert hidden" role="status"></div>
             <div id="rewardNotice" class="reward-notice hidden"></div>
           </div>
 

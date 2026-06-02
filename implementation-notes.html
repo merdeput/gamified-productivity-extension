@@ -203,20 +203,32 @@
     <li>Future blocking logic should connect the saved arrays in <code>background.js</code> to <code>webNavigation</code> or <code>declarativeNetRequest</code>.</li>
   </ul>
 
+  <h2>Pomodoro Audio Notifications</h2>
+  <ul>
+    <li>Added audio notification for automatic work-timer and rest-timer completion using <code>assets/audios/end-of-session.mp3</code>, the provided session-ending sound.</li>
+    <li>Audio events are created inside <code>advanceTimer</code> in <code>actions.js</code>, which is the existing work/rest timer transition path. Audio is not triggered from general rendering.</li>
+    <li>Each event stores a stable key such as <code>missionId:sessionNumber:work_audio_played</code> or <code>missionId:sessionNumber:rest_audio_played</code>.</li>
+    <li>The side panel attempts playback with <code>new Audio(chrome.runtime.getURL("assets/audios/end-of-session.mp3"))</code> and acknowledges the key through the existing background message router.</li>
+    <li>Acknowledged keys are persisted in <code>audioPlayedKeys</code> with a bounded history, preventing repeated playback during polling, re-rendering, or side-panel refreshes.</li>
+    <li>The existing timer flow remains unchanged: completed work automatically enters rest or completes the mission, and completed rest automatically starts the next work period.</li>
+    <li>A compact in-UI session alert is shown alongside the timer for work completion, rest start, next-work start, or final mission completion.</li>
+    <li>No <code>web_accessible_resources</code> entry is needed because playback happens inside the extension side-panel document using an internal extension URL.</li>
+  </ul>
+
   <h2>Files Changed</h2>
   <ul>
     <li><code>manifest.json</code>: configured the background service worker as an ES module.</li>
-    <li><code>background.js</code>: slimmed down to service-worker entrypoint and message dispatch; added settings action routes.</li>
+    <li><code>background.js</code>: slimmed down to service-worker entrypoint and message dispatch; added settings action routes and session-audio acknowledgement routing.</li>
     <li><code>state.js</code>: removed after its responsibilities were split into the three focused modules below.</li>
-    <li><code>constants.js</code>: added dependency-free static settings, state defaults, and timer-mode constants.</li>
-    <li><code>utils.js</code>: added stateless normalization, validation, timer query, formatting, reward, mission initialization, date, ID, and placeholder site-list helpers.</li>
-    <li><code>actions.js</code>: added task, mission, Pomodoro, scheduling, settings, reward, and garden-seed state transitions.</li>
+    <li><code>constants.js</code>: added dependency-free static settings, state defaults, timer-mode constants, and session-audio state defaults.</li>
+    <li><code>utils.js</code>: added stateless normalization, validation, timer query, formatting, reward, mission initialization, date, ID, placeholder site-list helpers, and session-audio state normalization.</li>
+    <li><code>actions.js</code>: added task, mission, Pomodoro, scheduling, settings, reward, garden, timer-completion alert, and session-audio acknowledgement state transitions.</li>
     <li><code>storage.js</code>: added centralized Chrome storage wrapper.</li>
-    <li><code>popup/popup.html</code>: collapsed navigation to Tasks, Mission, and Garden; added the task deadline date input, active mission panel markup, top-right settings button, compact settings dropdown, theme selector, optional-selection empty state, and initially compact mission controls.</li>
+    <li><code>popup/popup.html</code>: collapsed navigation to Tasks, Mission, and Garden; added the task deadline date input, active mission panel markup, top-right settings button, compact settings dropdown, theme selector, optional-selection empty state, initially compact mission controls, and compact timer-session alert.</li>
     <li><code>popup/popup.html</code>: changed the side-panel script to an ES module.</li>
     <li><code>popup/popup.js</code>: reduced to the side-panel entrypoint.</li>
-    <li><code>popup/ui.js</code>: added compact UI event handling and rendering; guards against overlapping timer refresh polls; renders the deadline board, native drag-and-drop rescheduling, deadline color classes, optional selected-task state, state-based mission control visibility, active mission visibility panel, persisted settings behavior, and theme class.</li>
-    <li><code>popup/popup.css</code>: simplified layout for the compact side-panel UI, made the side panel fluid/responsive, and added compact date-board, subtle deadline state colors, active-mission panel, settings dropdown, and dark-theme styling.</li>
+    <li><code>popup/ui.js</code>: added compact UI event handling and rendering; guards against overlapping timer refresh polls; renders the deadline board, native drag-and-drop rescheduling, deadline color classes, optional selected-task state, state-based mission control visibility, active mission visibility panel, persisted settings behavior, theme class, session audio playback, and deduplicated acknowledgement.</li>
+    <li><code>popup/popup.css</code>: simplified layout for the compact side-panel UI, made the side panel fluid/responsive, and added compact date-board, subtle deadline state colors, active-mission panel, settings dropdown, session-alert, and dark-theme styling.</li>
     <li><code>implementation-notes.html</code>: updated this documentation.</li>
   </ul>
 
@@ -225,9 +237,11 @@
     <li>Blocked sites are still placeholders and do not affect navigation.</li>
     <li>The garden still only shows saved seeds.</li>
     <li>Only one active mission is supported at a time.</li>
-    <li>There are no completion notifications yet.</li>
+    <li>There are no browser notifications yet. Session completion currently uses side-panel audio and an in-UI alert.</li>
     <li>There are no automated tests yet.</li>
     <li>Settings defaults apply to newly created tasks and missions only; there is no bulk apply-to-existing-tasks action.</li>
+    <li>MV3 background service workers do not reliably play audio directly. Session audio therefore plays only while the side panel is open. Alerts older than 15 seconds are acknowledged without late playback.</li>
+    <li>Browser autoplay policy may still block playback. The UI keeps the visual session alert and reports the blocked audio attempt without interrupting timer behavior.</li>
     <li>Rest and next-work timers still start automatically under the existing timer model, so there are no separate rest-ready or next-work-ready pauses.</li>
   </ul>
 

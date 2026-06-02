@@ -101,6 +101,8 @@ export function normalizeState(stored = {}) {
     tasks,
     activeMission,
     lastResult: stored.lastResult || null,
+    sessionAlert: stored.sessionAlert || null,
+    audioPlayedKeys: Array.isArray(stored.audioPlayedKeys) ? stored.audioPlayedKeys : [],
     settings: normalizeSettings(stored.settings),
     garden: {
       ...DEFAULT_STATE.garden,
@@ -187,10 +189,14 @@ export function validateSettingsInput(payload = {}) {
   const defaultWorkMinutes = positiveNumber(payload.defaultWorkMinutes);
   const defaultRestMinutes = positiveNumber(payload.defaultRestMinutes);
   const defaultTotalSessions = positiveInteger(payload.defaultTotalSessions);
+  const audioVolume = Number(payload.audioVolume);
 
   if (!defaultWorkMinutes) throw new Error("Default work duration must be a positive number.");
   if (!defaultRestMinutes) throw new Error("Default rest duration must be a positive number.");
   if (!defaultTotalSessions) throw new Error("Default total sessions must be a positive whole number.");
+  if (!Number.isFinite(audioVolume) || audioVolume < 0 || audioVolume > 100) {
+    throw new Error("Audio volume must be between 0 and 100.");
+  }
 
   return {
     defaultWorkMinutes,
@@ -198,7 +204,8 @@ export function validateSettingsInput(payload = {}) {
     defaultTotalSessions,
     showCompletedTasks: payload.showCompletedTasks !== false,
     compactMode: payload.compactMode !== false,
-    theme: payload.theme === "dark" ? "dark" : "light"
+    theme: payload.theme === "dark" ? "dark" : "light",
+    audioVolume
   };
 }
 
