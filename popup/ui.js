@@ -153,13 +153,13 @@ function buildTaskPayload({ taskId, title, fallbackTask, useTaskFormDeadline }) 
       : fallbackTask?.deadlineDate || getTodayDateString(),
     workDurationMinutes: useAppDefaults
       ? state.settings.defaultWorkMinutes
-      : Number($("workDurationInput")?.value || mission.workDurationMinutes || 25),
+      : Number($("workDurationInput")?.value || mission.workDurationMinutes || 20),
     restDurationMinutes: useAppDefaults
       ? state.settings.defaultRestMinutes
-      : Number($("restDurationInput")?.value || mission.restDurationMinutes || 5),
+      : Number($("restDurationInput")?.value || mission.restDurationMinutes || 3),
     totalSessions: useAppDefaults
       ? state.settings.defaultTotalSessions
-      : Number($("totalSessionsInput")?.value || mission.totalSessions || 4),
+      : Number($("totalSessionsInput")?.value || mission.totalSessions || 2),
     softBlockedSites: useAppDefaults ? [] : parseSiteText($("softBlockedSitesInput")?.value || fallbackTask?.softBlockedSites?.join(", ") || ""),
     hardBlockedSites: useAppDefaults ? [] : parseSiteText($("hardBlockedSitesInput")?.value || fallbackTask?.hardBlockedSites?.join(", ") || "")
   };
@@ -183,6 +183,7 @@ async function saveSettings(event) {
   }
 
   await sendAction("UPDATE_SETTINGS", payload, "Settings saved.");
+  closeSettingsPanel();
 }
 
 async function resetSettings() {
@@ -298,7 +299,7 @@ function createTaskCard(task) {
       <p class="task-title">${escapeHtml(task.title)}</p>
       <span class="badge">${escapeHtml(task.status)}</span>
     </div>
-    <p class="muted">${mission.totalSessions || 1} sessions, ${mission.workDurationMinutes || 25}m work, ${mission.restDurationMinutes || 5}m rest</p>
+    <p class="muted">${mission.totalSessions || 1} sessions, ${mission.workDurationMinutes || 20}m work, ${mission.restDurationMinutes || 3}m rest</p>
     <div class="actions task-actions ${isSelected ? "" : "hidden"}">
       <button class="primary" data-action="select">Select</button>
       <button data-action="edit">Rename</button>
@@ -495,18 +496,18 @@ function resetTaskForm() {
 
 function loadMissionForm(task) {
   const mission = task.mission || {};
-  $("workDurationInput").value = mission.workDurationMinutes || 25;
-  $("restDurationInput").value = mission.restDurationMinutes || 5;
-  $("totalSessionsInput").value = mission.totalSessions || 4;
+  $("workDurationInput").value = mission.workDurationMinutes || 20;
+  $("restDurationInput").value = mission.restDurationMinutes || 3;
+  $("totalSessionsInput").value = mission.totalSessions || 2;
   $("softBlockedSitesInput").value = (task.softBlockedSites || mission.softBlockedSites || []).join(", ");
   $("hardBlockedSitesInput").value = (task.hardBlockedSites || mission.hardBlockedSites || []).join(", ");
 }
 
 function loadSettingsForm() {
   const settings = state.settings || {};
-  $("defaultWorkMinutesInput").value = settings.defaultWorkMinutes ?? 25;
-  $("defaultRestMinutesInput").value = settings.defaultRestMinutes ?? 5;
-  $("defaultTotalSessionsInput").value = settings.defaultTotalSessions ?? 4;
+  $("defaultWorkMinutesInput").value = settings.defaultWorkMinutes ?? 20;
+  $("defaultRestMinutesInput").value = settings.defaultRestMinutes ?? 3;
+  $("defaultTotalSessionsInput").value = settings.defaultTotalSessions ?? 2;
   $("showCompletedTasksInput").checked = settings.showCompletedTasks !== false;
   $("compactModeInput").checked = settings.compactMode !== false;
   $("themeInput").value = settings.theme === "dark" ? "dark" : "light";

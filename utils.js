@@ -125,9 +125,9 @@ export function normalizeTask(task) {
 }
 
 export function normalizeMission(mission, task) {
-  const workDurationMinutes = positiveNumber(mission?.workDurationMinutes || mission?.durationMinutes || task?.durationMinutes || 25);
-  const restDurationMinutes = positiveNumber(mission?.restDurationMinutes || 5);
-  const totalSessions = positiveInteger(mission?.totalSessions || 1);
+  const workDurationMinutes = positiveNumber(mission?.workDurationMinutes || mission?.durationMinutes || task?.durationMinutes || 20);
+  const restDurationMinutes = positiveNumber(mission?.restDurationMinutes || 3);
+  const totalSessions = positiveInteger(mission?.totalSessions || 2);
   const timerMode = TIMER_MODES.includes(mission?.timerMode) ? mission.timerMode : "idle";
 
   return {

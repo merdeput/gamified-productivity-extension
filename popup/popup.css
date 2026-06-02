@@ -554,7 +554,7 @@ body.dark-theme .date-column-title span {
   color: #b8c0c5;
 }
 
-body.dark-theme .seed-pill,
+body.dark-theme .coin-pill,
 body.dark-theme .reward-notice {
   border-color: #4d7e5d;
   background: #263b2d;
@@ -622,7 +622,7 @@ body.dark-theme .date-drop-zone.drag-over {
     flex-direction: column;
   }
 
-  .seed-pill,
+  .coin-pill,
   .badge,
   .mode-pill {
     justify-self: start;
