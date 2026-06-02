@@ -4,10 +4,13 @@
  */
 
 import { getPlantStage, FLOWER_DEFINITIONS } from './plantGrowth.js';
+import { getState, saveState } from '../../storage.js';
+
 import { 
   loadGarden, 
   saveGarden, 
   addPlant, 
+  updateCoins,
   removePlant,
   getPlantsAtTile
 } from './gardenStorage.js';
@@ -35,7 +38,6 @@ export async function initGarden(container, state) {
   const flowerStore = container.querySelector('#flowerStore');
   const gardenCoinsEl = container.querySelector('#gardenCoins');
   const gardenInfoEl = container.querySelector('#gardenInfo');
-  const plantButton = container.querySelector('#plantTestRoseBtn');
   
   try {
     // Load map data
@@ -149,74 +151,99 @@ function setupGardenEvents(mapLayer, plantLayer, container, state) {
   
   // Click handler for planting
   mapLayer?.addEventListener('click', async (event) => {
-    if (!plantingMode || !selectedFlowerType) return;
-    
-    const tile = getTileFromEvent(event, mapLayer);
-    if (!tile) {
-      gardenInfoEl.textContent = 'That tile is not plantable. Please choose another.';
+  if (!plantingMode || !selectedFlowerType) return;
+
+  const tile = getTileFromEvent(event, mapLayer);
+  if (!tile) {
+    gardenInfoEl.textContent = 'That tile is not plantable. Please choose another.';
+    return;
+  }
+
+  try {
+    // Always load latest garden state
+    let gardenState = await loadGarden();
+
+    // Check occupied tile
+    const existingPlants = getPlantsAtTile(
+      gardenState,
+      tile.tileX,
+      tile.tileY
+    );
+
+    if (existingPlants.length > 0) {
+      gardenInfoEl.textContent = 'This tile already has a plant!';
       return;
     }
-    
-    try {
-      // Check if tile is occupied
-      const gardenState = await loadGarden();
-      const existingPlants = getPlantsAtTile(gardenState, tile.tileX, tile.tileY);
-      
-      if (existingPlants.length > 0) {
-        gardenInfoEl.textContent = 'This tile already has a plant!';
-        return;
-      }
-      
-      // Get flower price from definitions
-      const flowerDef = FLOWER_DEFINITIONS.find(f => f.type === selectedFlowerType);
-      const cost = flowerDef?.price || 10;
-      const currentCoins = gardenState.coins || 0;
-      
-      if (currentCoins < cost) {
-        gardenInfoEl.textContent = `Not enough coins! Need ${cost}, have ${currentCoins}.`;
-        return;
-      }
-      
-      // Create and plant the flower
-      const plant = createPlant(selectedFlowerType, tile.tileX, tile.tileY, state.totalFocusMinutes || 0, 60);
-      const updated = await addPlant(gardenState, plant);
-      
-      // Deduct coins and save
-      updated.coins = Math.max(0, (updated.coins || 0) - cost);
-      await saveGarden(updated);
-      
-      // Update state with new coin count
-      state.garden.coins = updated.coins;
-      
-      // Sync coin displays immediately
-      const coinCountEl = document.getElementById('coinCount');
-      if (coinCountEl) {
-        coinCountEl.textContent = updated.coins;
-      }
-      const gardenCoinsEl = container.querySelector('#gardenCoins');
-      if (gardenCoinsEl) {
-        gardenCoinsEl.textContent = `${updated.coins} coin${updated.coins === 1 ? '' : 's'}`;
-      }
-      
-      // Update garden display
-      updateGardenDisplay(container, updated, state);
-      
-      // Exit planting mode
-      const plantedName = selectedFlowerName;
-      plantingMode = false;
-      selectedFlowerType = null;
-      selectedFlowerName = null;
-      plantButton.textContent = 'Plant a Flower';
-      plantButton.classList.remove('active');
-      flowerStore?.classList.add('hidden');
-      flowerOptionsDiv?.querySelectorAll('.flower-option').forEach(b => b.classList.remove('selected'));
-      gardenInfoEl.textContent = `Planted a ${plantedName} at (${tile.tileX}, ${tile.tileY})! (-${cost} coins)`;
-      
-    } catch (error) {
-      console.error('Failed to plant:', error);
-      gardenInfoEl.textContent = 'Failed to plant. Please try again.';
+
+    // Flower cost
+    const flowerDef = FLOWER_DEFINITIONS.find(
+      f => f.type === selectedFlowerType
+    );
+
+    const cost = flowerDef?.price || 10;
+    const currentCoins = gardenState.coins || 0;
+
+    if (currentCoins < cost) {
+      gardenInfoEl.textContent =
+        `Not enough coins! Need ${cost}, have ${currentCoins}.`;
+      return;
     }
-  });
+
+    // Create plant
+    const currentState = await getState();
+    console.log("currstate =", state);
+    const plant = createPlant(
+      selectedFlowerType,
+      tile.tileX,
+      tile.tileY,
+      currentState.totalFocusMinutes || 0,
+      60
+    );
+
+    console.log(
+      "current focus:",
+      state.totalFocusMinutes,
+      "plant focus:",
+      plant.plantedAtFocusMinutes
+    );
+
+    // Add plant
+    gardenState = await addPlant(plant);
+
+    // Deduct coins
+    gardenState = await updateCoins(-cost);
+
+    // Keep popup state in sync
+    state.garden = gardenState;
+
+    // Update UI
+    updateGardenDisplay(container, gardenState, state);
+
+    // Exit planting mode
+    const plantedName = selectedFlowerName;
+
+    plantingMode = false;
+    selectedFlowerType = null;
+    selectedFlowerName = null;
+
+    plantButton.textContent = 'Plant a Flower';
+    plantButton.classList.remove('active');
+
+    flowerStore?.classList.add('hidden');
+
+    flowerOptionsDiv
+      ?.querySelectorAll('.flower-option')
+      .forEach(b => b.classList.remove('selected'));
+
+    gardenInfoEl.textContent =
+      `Planted a ${plantedName} at (${tile.tileX}, ${tile.tileY})! (-${cost} coins)`;
+
+  } catch (error) {
+    console.error('Failed to plant:', error);
+    gardenInfoEl.textContent =
+      'Failed to plant. Please try again.';
+  }
+});
 }
 
 /**
@@ -250,6 +277,7 @@ function updateGardenDisplay(container, gardenState, appState) {
   
   // Render plants
   const totalFocusMinutes = appState?.totalFocusMinutes || 0;
+  console.log("Focus = ", totalFocusMinutes);
   renderPlants(plantLayer, gardenState.plants || [], totalFocusMinutes);
   
   // Update coin display
@@ -272,6 +300,7 @@ function updateCoinDisplays(container, coins) {
 export async function refreshGarden(container, state) {
   try {
     const gardenState = await loadGarden();
+    gardenState.coins = state.garden?.coins || 0;
     updateGardenDisplay(container, gardenState, state);
   } catch (error) {
     console.error('Failed to refresh garden:', error);
@@ -285,8 +314,7 @@ export async function refreshGarden(container, state) {
  */
 export async function removeGardenPlant(plantId) {
   try {
-    const gardenState = await loadGarden();
-    return await removePlant(gardenState, plantId);
+    return await removePlant(plantId);
   } catch (error) {
     console.error('Failed to remove plant:', error);
     throw error;

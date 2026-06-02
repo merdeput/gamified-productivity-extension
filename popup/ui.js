@@ -443,20 +443,23 @@ function renderRewardNotice(mission) {
 
 function renderGardenPlaceholder() {
   const coins = state.garden?.coins || 0;
+
   const gardenScreen = $("gardenScreen");
+
   if (gardenScreen) {
     const coinsEl = gardenScreen.querySelector("#gardenCoins");
+
     if (coinsEl) {
-      coinsEl.textContent = `${coins} coin${coins === 1 ? '' : 's'}`;
+      coinsEl.textContent = `${coins} coin${coins === 1 ? "" : "s"}`;
     }
   }
-  
-  // Initialize garden if not already initialized
+
   if (gardenController === null) {
     initGardenView(gardenScreen);
   } else if (gardenController) {
-    // Refresh garden on render with current state
-    gardenController.refresh(state).catch(err => console.warn('Failed to refresh garden:', err));
+    gardenController
+      .refresh(state)
+      .catch(err => console.warn("Failed to refresh garden:", err));
   }
 }
 
@@ -595,7 +598,7 @@ function showScreen(screenId) {
     if (gardenScreen && gardenController === null) {
       initGardenView(gardenScreen).catch(err => console.error('Failed to initialize garden:', err));
     } else if (gardenController) {
-      gardenController.refresh().catch(err => console.warn('Failed to refresh garden:', err));
+      gardenController.refresh(state).catch(err => console.warn('Failed to refresh garden:', err));
     }
   }
 }
