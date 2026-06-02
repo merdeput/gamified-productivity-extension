@@ -1,10 +1,10 @@
 export const DEFAULT_SETTINGS = {
-  defaultWorkMinutes: 25,
-  defaultRestMinutes: 5,
-  defaultTotalSessions: 4,
+  defaultWorkMinutes: 20,
+  defaultRestMinutes: 3,
+  defaultTotalSessions: 2,
   showCompletedTasks: true,
   compactMode: true,
-  theme: "light"
+  theme: "dark"
 };
 
 export const DEFAULT_STATE = {
