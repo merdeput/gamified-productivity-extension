@@ -495,6 +495,95 @@ progress {
   margin-top: 8px;
 }
 
+.settings-analytics-panel {
+  display: grid;
+  gap: 0.55rem;
+  padding: clamp(0.5rem, 1.6vw, 0.7rem);
+  border: 1px dashed #ded5c8;
+  border-radius: 8px;
+  background: #fbfaf7;
+}
+
+.settings-analytics-panel h3,
+.blocked-site-section h3 {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.blocked-site-sections {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.65rem;
+}
+
+.blocked-site-section {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 0.55rem;
+  border: 1px solid #e3dbcf;
+  border-radius: 8px;
+  background: #fffdf9;
+}
+
+.blocked-site-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.blocked-site-section-head button {
+  flex: 0 0 auto;
+  min-height: 1.85rem;
+  padding: 0.3rem 0.5rem;
+}
+
+.blocked-site-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-height: 1.9rem;
+  align-items: center;
+}
+
+.blocked-site-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 100%;
+  padding: 0.25rem 0.3rem 0.25rem 0.5rem;
+  border: 1px solid #cfc7ba;
+  border-radius: 999px;
+  background: #fff;
+  color: #252525;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.blocked-site-pill span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.blocked-site-remove {
+  display: grid;
+  place-items: center;
+  width: 1.15rem;
+  min-width: 1.15rem;
+  min-height: 1.15rem;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.blocked-site-empty {
+  color: #777;
+  font-size: 11px;
+}
+
+
 .reward-notice {
   margin-top: 8px;
   padding: clamp(0.5rem, 1.6vw, 0.7rem);
@@ -610,9 +699,21 @@ body.dark-theme .date-empty,
 body.dark-theme .task-item,
 body.dark-theme .timer-box,
 body.dark-theme .garden-placeholder,
-body.dark-theme .blocking-details {
+body.dark-theme .blocking-details,
+body.dark-theme .settings-analytics-panel,
+body.dark-theme .blocked-site-section {
   border-color: #3c4348;
   background: #1f2427;
+}
+
+body.dark-theme .blocked-site-pill {
+  border-color: #505960;
+  background: #24292d;
+  color: #f0f2f3;
+}
+
+body.dark-theme .blocked-site-empty {
+  color: #7a8791;
 }
 
 body.dark-theme .task-card--past {
@@ -824,34 +925,8 @@ body.dark-theme .date-drop-zone.drag-over {
   line-height: 1.2;
 }
 
-.tabs-four {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
  
-/* ── 2. Blocking mode selector ──────────────────────────────────────────── */
- 
-.blocking-mode-row {
-  display: grid;
-  gap: 5px;
-  margin-top: 10px;
-  margin-bottom: 4px;
-}
- 
-.blocking-mode-label {
-  display: block;
-  font-size: 12px;
-  font-weight: bold;
-  color: #555;
-}
- 
-.blocking-mode-hint {
-  font-size: 11px;
-  color: #888;
-  margin: 0;
-  line-height: 1.4;
-}
- 
-/* ── 3. Analytics screen ────────────────────────────────────────────────── */
+/* Settings analytics panel */
  
 .analytics-summary {
   display: grid;
@@ -1045,8 +1120,6 @@ body.dark-theme .analytics-reason-count { color: #b8c0c5; }
 body.dark-theme .analytics-reason-bar-wrap { background: #363f46; }
 body.dark-theme .analytics-reason-bar  { background: #5d9b72; }
 body.dark-theme .analytics-section-title { color: #6a7880; }
-body.dark-theme .blocking-mode-label   { color: #b8c0c5; }
-body.dark-theme .blocking-mode-hint    { color: #6a7880; }
  
 /* ── Responsive ─────────────────────────────────────────────────────────── */
  
@@ -1057,9 +1130,5 @@ body.dark-theme .blocking-mode-hint    { color: #6a7880; }
  
   .analytics-row-grid {
     grid-template-columns: 1fr;
-  }
- 
-  .tabs-four {
-    grid-template-columns: 1fr 1fr;
   }
 }

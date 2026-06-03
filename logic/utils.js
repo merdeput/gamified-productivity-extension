@@ -4,7 +4,7 @@ import {
   RUNNING_MODES,
   TIMER_MODES
 } from "./constants.js";
-import { DEFAULT_BLOCKING_ANALYTICS } from "./popup/blocking/blockingConstants.js";
+import { DEFAULT_BLOCKING_ANALYTICS } from "./blocking/blockingConstants.js";
  
 export function positiveNumber(value) {
   const number = Number(value);
@@ -162,8 +162,7 @@ export function normalizeMission(mission, task) {
     completedAt:         mission?.completedAt         || null,
     rewardClaimed:       Boolean(mission?.rewardClaimed),
     softBlockedSites:    normalizeSiteList(mission?.softBlockedSites || task?.softBlockedSites),
-    hardBlockedSites:    normalizeSiteList(mission?.hardBlockedSites || task?.hardBlockedSites),
-    blockingMode: mission?.blockingMode === "hard" ? "hard" : "soft" 
+    hardBlockedSites:    normalizeSiteList(mission?.hardBlockedSites || task?.hardBlockedSites)
   };
 }
  
@@ -196,8 +195,7 @@ export function validateTaskInput(payload, defaults = DEFAULT_SETTINGS) {
     restDurationMinutes,
     totalSessions,
     softBlockedSites: normalizeSiteList(payload.softBlockedSites),
-    hardBlockedSites: normalizeSiteList(payload.hardBlockedSites),
-    blockingMode: payload.blockingMode === "hard" ? "hard" : "soft"   
+    hardBlockedSites: normalizeSiteList(payload.hardBlockedSites)
   };
 }
  
@@ -250,7 +248,6 @@ export function createMission(input) {
     completedAt:         null,
     rewardClaimed:       false,
     softBlockedSites:    input.softBlockedSites,
-    hardBlockedSites:    input.hardBlockedSites,
-    blockingMode: input.blockingMode === "hard" ? "hard" : "soft" 
+    hardBlockedSites:    input.hardBlockedSites
   };
 }

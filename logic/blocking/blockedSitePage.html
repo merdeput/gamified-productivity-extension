@@ -1,0 +1,98 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fokus Stay on Track</title>
+  <link rel="stylesheet" href="blockedSitePage.css" />
+</head>
+<body>
+<div class="page" id="page">
+
+  <!-- Header -->
+  <div class="header">
+    <span class="logo">FOKUS</span>
+    <span class="mode-badge" id="modeBadge">soft</span>
+  </div>
+
+  <!-- Blocked site banner -->
+  <div class="card blocked-banner">
+    <div class="card-title">Blocked site</div>
+    <div class="site-name" id="siteName">example.com</div>
+    <div class="subtitle" id="blockSubtitle">This site is on your soft-block list.</div>
+  </div>
+
+  <!-- Focus progress (soft mode) -->
+  <div class="card" id="progressCard">
+    <div class="card-title">Your progress today</div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-label">Session</div>
+        <div class="stat-value" id="sessionStat">0 / 0</div>
+        <div class="stat-sub" id="timerModeStat">idle</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Focus today</div>
+        <div class="stat-value" id="focusStat">0 min</div>
+        <div class="stat-sub">total</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Garden</div>
+        <div class="stat-value" id="plantsStat">0 ðŸŒ±</div>
+        <div class="stat-sub"><span id="coinsStat">0</span> coins</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Motivational message (soft mode only) -->
+  <div class="card motivation" id="motivationCard">
+    <div class="card-title">Keep going</div>
+    <p id="motivationText"></p>
+  </div>
+
+  <!-- Reason selector -->
+  <div class="card" id="reasonCard">
+    <div class="reason-question">Why are you opening this website?</div>
+    <div class="reason-grid" id="reasonGrid">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- Penalty warning (soft, non-productive) -->
+  <div class="penalty-warning" id="penaltyWarning">
+    Proceeding for entertainment or other reasons will remove 25% of your growing flowers.
+  </div>
+
+  <!-- Denied notice (hard mode, non-productive) -->
+  <div class="denied-notice" id="deniedNotice">
+    Access denied in Hard Mode. You cannot visit this site while your focus session is active.
+  </div>
+
+  <!-- Action buttons -->
+  <div class="actions" id="actionsArea">
+
+    <!-- Return to Focus (always shown initially) -->
+    <button class="btn btn-return" id="returnBtn" type="button">
+      Return to Focus
+    </button>
+    <div class="coin-notice" id="coinNotice">
+      You'll earn <span class="coin-pill" id="coinRewardPill">+5 coins</span> for resisting!
+    </div>
+
+    <!-- Proceed / Continue -->
+    <button class="btn btn-proceed" id="proceedBtn" type="button" disabled>
+      Continue to site
+    </button>
+
+  </div>
+
+  <!-- Outcome banners (shown after decision) -->
+  <div class="outcome-banner success" id="successOutcome"></div>
+  <div class="outcome-banner blocked" id="blockedOutcome"></div>
+
+</div>
+
+<script src="blockedSitePage.js"></script>
+</body>
+</html>
+

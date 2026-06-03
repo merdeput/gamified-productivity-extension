@@ -11,7 +11,7 @@
  * 3.  A content script (`blockingContent.js`) is injected into the tab to show
  *     the blocking UI *before* the page finishes loading.
  * 4.  Because Manifest V3 does not allow synchronous blocking in content
- *     scripts, we use a redirect to `blocking.html` (a bundled extension page)
+ *     scripts, we use a redirect to `blockedSitePage.html` (a bundled extension page)
  *     and pass all context via URL parameters.
  *
  * Message protocol (popup / content script ↔ background):
@@ -24,9 +24,9 @@
  *   BLOCKING_RESET_ANALYTICS → reset analytics to zero
  */
 
-import { getState, saveState } from "../../storage.js";
-import { normalizeState } from "../../utils.js";
-import { RUNNING_MODES } from "../../constants.js";
+import { getState, saveState } from "../storage.js";
+import { normalizeState } from "../utils.js";
+import { RUNNING_MODES } from "../constants.js";
 import {
   allowBlockedAccess,
   denyBlockedAccess,
@@ -37,6 +37,9 @@ import {
   resetBlockingAnalytics
 } from "./blockingActions.js";
 import { BLOCK_MODES } from "./blockingConstants.js";
+
+const ALLOWED_NAVIGATION_TTL_MS = 10000;
+const allowedNavigations = new Map();
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
 
@@ -68,6 +71,34 @@ function isHostnameBlocked(hostname, siteList) {
   return siteList.some(
     (site) => hostname === site || hostname.endsWith(`.${site}`)
   );
+}
+
+function allowNextNavigation(tabId, url) {
+  const hostname = hostnameFromUrl(url);
+  if (!Number.isInteger(tabId) || !hostname) return;
+  allowedNavigations.set(tabId, {
+    hostname,
+    expiresAt: Date.now() + ALLOWED_NAVIGATION_TTL_MS
+  });
+}
+
+function consumeAllowedNavigation(tabId, url) {
+  const allowed = allowedNavigations.get(tabId);
+  if (!allowed) return false;
+
+  if (Date.now() > allowed.expiresAt) {
+    allowedNavigations.delete(tabId);
+    return false;
+  }
+
+  const hostname = hostnameFromUrl(url);
+  const matches = hostname === allowed.hostname || hostname.endsWith(`.${allowed.hostname}`);
+  if (matches) {
+    allowedNavigations.delete(tabId);
+    return true;
+  }
+
+  return false;
 }
 
 // ─── Active blocking context ──────────────────────────────────────────────────
@@ -117,7 +148,7 @@ function missionToParams(mission, state) {
     totalFocusMinutes:  String(state.totalFocusMinutes || 0),
     gardenCoins:        String(state.garden?.coins || 0),
     gardenPlantCount:   String(state.garden?.plants?.length || 0),
-    // Pass the original URL so blocking.html can redirect after allow
+    // Pass the original URL so the blocked-site page can redirect after allow.
     originalUrl:        mission.originalUrl || ""
   });
 }
@@ -137,6 +168,8 @@ export function initBlockingNavigation() {
     const extensionOrigin = chrome.runtime.getURL("");
     if (details.url.startsWith(extensionOrigin)) return;
 
+    if (consumeAllowedNavigation(details.tabId, details.url)) return;
+
     const state = await getState();
     const ctx   = getBlockingContext(state, details.url);
     if (!ctx) return;
@@ -154,7 +187,7 @@ export function initBlockingNavigation() {
       { ...ctx, originalUrl: details.url },
       attemptResult.state
     );
-    const blockingPageUrl = chrome.runtime.getURL(`popup/blocking/blocking.html?${params}`);
+    const blockingPageUrl = chrome.runtime.getURL(`logic/blocking/blockedSitePage.html?${params}`);
 
     // Redirect the tab to the blocking page
     chrome.tabs.update(details.tabId, { url: blockingPageUrl });
@@ -164,16 +197,18 @@ export function initBlockingNavigation() {
 // ─── Message handlers ─────────────────────────────────────────────────────────
 
 /**
- * Handle messages sent from blocking.html / blockingContent.js.
+ * Handle messages sent from blockedSitePage.html.
  * Returns a Promise<any> with the response payload.
  *
  * @param {{ type: string, payload: Object }} message
  * @returns {Promise<any>}
  */
-export async function handleBlockingMessage(message) {
+export async function handleBlockingMessage(message, sender = {}) {
   const { type, payload = {} } = message;
 
   if (type === "BLOCKING_ALLOW") {
+    allowNextNavigation(sender.tab?.id, payload.originalUrl);
+
     // User gave a reason and chose to proceed
     return runBlockingStateAction((state) =>
       allowBlockedAccess(state, {

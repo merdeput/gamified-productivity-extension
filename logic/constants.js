@@ -1,4 +1,4 @@
-import { DEFAULT_BLOCKING_ANALYTICS } from "./popup/blocking/blockingConstants.js";
+import { DEFAULT_BLOCKING_ANALYTICS } from "./blocking/blockingConstants.js";
 
 export const DEFAULT_SETTINGS = {
   defaultWorkMinutes: 20,

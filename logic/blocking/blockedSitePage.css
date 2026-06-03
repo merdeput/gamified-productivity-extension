@@ -1,11 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fokus — Stay on Track</title>
-  <style>
-    /* ─── Reset & base ─────────────────────────────────────────────── */
+﻿/* â”€â”€â”€ Reset & base â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -48,7 +41,7 @@
       padding: 2rem 1rem 4rem;
     }
 
-    /* ─── Layout ───────────────────────────────────────────────────── */
+    /* â”€â”€â”€ Layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .page {
       width: 100%;
       max-width: 540px;
@@ -57,7 +50,7 @@
       gap: 1rem;
     }
 
-    /* ─── Header ───────────────────────────────────────────────────── */
+    /* â”€â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .header {
       display: flex;
       align-items: center;
@@ -76,7 +69,7 @@
     .mode-badge.soft { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning-border); }
     .mode-badge.hard { background: var(--danger-bg);  color: var(--danger);  border: 1px solid var(--danger-border); }
 
-    /* ─── Card ─────────────────────────────────────────────────────── */
+    /* â”€â”€â”€ Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -94,7 +87,7 @@
       margin-bottom: 0.6rem;
     }
 
-    /* ─── Blocked site banner ──────────────────────────────────────── */
+    /* â”€â”€â”€ Blocked site banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .blocked-banner {
       border-color: var(--danger-border);
       background: var(--danger-bg);
@@ -111,7 +104,7 @@
       margin-top: 3px;
     }
 
-    /* ─── Progress stats ───────────────────────────────────────────── */
+    /* â”€â”€â”€ Progress stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .stats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -145,7 +138,7 @@
       color: var(--muted);
     }
 
-    /* ─── Motivational message ─────────────────────────────────────── */
+    /* â”€â”€â”€ Motivational message â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .motivation {
       border-color: var(--border-green);
       background: var(--green-light);
@@ -157,7 +150,7 @@
       line-height: 1.5;
     }
 
-    /* ─── Reason selector ──────────────────────────────────────────── */
+    /* â”€â”€â”€ Reason selector â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .reason-question {
       font-size: 13px;
       font-weight: bold;
@@ -197,7 +190,7 @@
     }
     .reason-btn .emoji { font-size: 1.1rem; flex-shrink: 0; }
 
-    /* ─── Action buttons ───────────────────────────────────────────── */
+    /* â”€â”€â”€ Action buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .actions { display: flex; flex-direction: column; gap: 0.55rem; }
 
     .btn {
@@ -235,7 +228,7 @@
       opacity: 1 !important;
     }
 
-    /* ─── Coin reward notice ───────────────────────────────────────── */
+    /* â”€â”€â”€ Coin reward notice â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .coin-notice {
       display: flex;
       align-items: center;
@@ -258,7 +251,7 @@
       color: var(--green);
     }
 
-    /* ─── Penalty warning ──────────────────────────────────────────── */
+    /* â”€â”€â”€ Penalty warning â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .penalty-warning {
       display: none;
       padding: 0.6rem 0.75rem;
@@ -272,7 +265,7 @@
     }
     .penalty-warning.visible { display: block; }
 
-    /* ─── Denied overlay ───────────────────────────────────────────── */
+    /* â”€â”€â”€ Denied overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .denied-notice {
       display: none;
       padding: 0.75rem;
@@ -287,7 +280,7 @@
     }
     .denied-notice.visible { display: block; }
 
-    /* ─── Outcome states ───────────────────────────────────────────── */
+    /* â”€â”€â”€ Outcome states â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .outcome-banner {
       display: none;
       padding: 1rem 1.25rem;
@@ -308,7 +301,7 @@
     }
     .outcome-banner.visible { display: block; }
 
-    /* ─── Countdown (hard mode denied) ────────────────────────────── */
+    /* â”€â”€â”€ Countdown (hard mode denied) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .countdown-row {
       display: none;
       justify-content: center;
@@ -321,7 +314,7 @@
     .countdown-row.visible { display: flex; }
     .countdown-timer { font-weight: bold; font-variant-numeric: tabular-nums; }
 
-    /* ─── Analytics panel (collapsed by default) ───────────────────── */
+    /* â”€â”€â”€ Analytics panel (collapsed by default) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .analytics-toggle {
       font-size: 11px;
       color: var(--muted);
@@ -352,99 +345,8 @@
     .analytics-item .a-label { color: var(--muted); }
     .analytics-item .a-value { font-weight: bold; }
 
-    /* ─── Responsive ───────────────────────────────────────────────── */
+    /* â”€â”€â”€ Responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     @media (max-width: 400px) {
       .stats-grid { grid-template-columns: 1fr 1fr; }
       .reason-grid { grid-template-columns: 1fr; }
     }
-  </style>
-</head>
-<body>
-<div class="page" id="page">
-
-  <!-- Header -->
-  <div class="header">
-    <span class="logo">FOKUS</span>
-    <span class="mode-badge" id="modeBadge">soft</span>
-  </div>
-
-  <!-- Blocked site banner -->
-  <div class="card blocked-banner">
-    <div class="card-title">Blocked site</div>
-    <div class="site-name" id="siteName">example.com</div>
-    <div class="subtitle" id="blockSubtitle">This site is on your soft-block list.</div>
-  </div>
-
-  <!-- Focus progress (soft mode) -->
-  <div class="card" id="progressCard">
-    <div class="card-title">Your progress today</div>
-    <div class="stats-grid">
-      <div class="stat-box">
-        <div class="stat-label">Session</div>
-        <div class="stat-value" id="sessionStat">0 / 0</div>
-        <div class="stat-sub" id="timerModeStat">idle</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Focus today</div>
-        <div class="stat-value" id="focusStat">0 min</div>
-        <div class="stat-sub">total</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Garden</div>
-        <div class="stat-value" id="plantsStat">0 🌱</div>
-        <div class="stat-sub"><span id="coinsStat">0</span> coins</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Motivational message (soft mode only) -->
-  <div class="card motivation" id="motivationCard">
-    <div class="card-title">Keep going</div>
-    <p id="motivationText"></p>
-  </div>
-
-  <!-- Reason selector -->
-  <div class="card" id="reasonCard">
-    <div class="reason-question">Why are you opening this website?</div>
-    <div class="reason-grid" id="reasonGrid">
-      <!-- Populated by JS -->
-    </div>
-  </div>
-
-  <!-- Penalty warning (soft, non-productive) -->
-  <div class="penalty-warning" id="penaltyWarning">
-    ⚠️ Proceeding for entertainment or other reasons will remove 25% of your growing flowers.
-  </div>
-
-  <!-- Denied notice (hard mode, non-productive) -->
-  <div class="denied-notice" id="deniedNotice">
-    🚫 Access denied in Hard Mode. You cannot visit this site while your focus session is active.
-  </div>
-
-  <!-- Action buttons -->
-  <div class="actions" id="actionsArea">
-
-    <!-- Return to Focus (always shown initially) -->
-    <button class="btn btn-return" id="returnBtn" type="button">
-      🌿 Return to Focus
-    </button>
-    <div class="coin-notice" id="coinNotice">
-      You'll earn <span class="coin-pill" id="coinRewardPill">+5 coins</span> for resisting!
-    </div>
-
-    <!-- Proceed / Continue -->
-    <button class="btn btn-proceed" id="proceedBtn" type="button" disabled>
-      Continue to site →
-    </button>
-
-  </div>
-
-  <!-- Outcome banners (shown after decision) -->
-  <div class="outcome-banner success" id="successOutcome"></div>
-  <div class="outcome-banner blocked" id="blockedOutcome"></div>
-
-</div>
-
-<script src="blockingPage.js"></script>
-</body>
-</html>

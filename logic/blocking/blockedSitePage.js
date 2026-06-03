@@ -1,7 +1,7 @@
 /**
- * blockingPage.js
+ * blockedSitePage.js
  *
- * Drives the blocking.html UI.
+ * Drives the blocked-site redirect page UI.
  *
  * URL parameters (all strings):
  *   mode                – "soft" | "hard"
@@ -222,7 +222,7 @@
     // Notify background
     await sendMessage({
       type:    "BLOCKING_ALLOW",
-      payload: { reasonId: selectedReasonId, mode }
+      payload: { reasonId: selectedReasonId, mode, originalUrl, site }
     });
 
     // Show feedback
@@ -265,7 +265,7 @@
         });
       } else {
         // Fallback for development / non-extension context
-        console.log("[blockingPage] sendMessage:", message);
+        console.log("[blockedSitePage] sendMessage:", message);
         resolve(null);
       }
     });

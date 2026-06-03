@@ -4,7 +4,7 @@
  * All functions follow the same { state, alarm } contract as actions.js.
  */
 
-import { normalizeState } from "../../utils.js";
+import { normalizeState } from "../utils.js";
 import {
   DEFAULT_BLOCKING_ANALYTICS,
   BLOCK_EVENT_TYPES,
@@ -54,7 +54,7 @@ export function recordBlockAttempt(state, payload) {
 export function recordReasonSelected(state, payload) {
   const analytics = getAnalytics(state);
   const reasonCounts = { ...analytics.reasonCounts };
-  if (reasonId in reasonCounts) {
+  if (payload.reasonId in reasonCounts) {
     reasonCounts[payload.reasonId] = (reasonCounts[payload.reasonId] || 0) + 1;
   }
   return withState({

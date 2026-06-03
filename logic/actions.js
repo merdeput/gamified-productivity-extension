@@ -31,8 +31,7 @@ export function createTask(state, payload) {
       workDurationMinutes: taskInput.workDurationMinutes,
       restDurationMinutes: taskInput.restDurationMinutes,
       softBlockedSites: taskInput.softBlockedSites,
-      hardBlockedSites: taskInput.hardBlockedSites,
-      blockingMode:        taskInput.blockingMode
+      hardBlockedSites: taskInput.hardBlockedSites
     })
   };
 
@@ -61,8 +60,7 @@ export function updateTask(state, payload) {
     restDurationMinutes: taskInput.restDurationMinutes,
     remainingSeconds: mission.timerMode === "idle" ? minutesToSeconds(taskInput.workDurationMinutes) : mission.remainingSeconds,
     softBlockedSites: taskInput.softBlockedSites,
-    hardBlockedSites: taskInput.hardBlockedSites,
-    blockingMode:        taskInput.blockingMode
+    hardBlockedSites: taskInput.hardBlockedSites
   };
 
   const tasks = state.tasks.map((task) => {

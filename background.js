@@ -1,4 +1,4 @@
-import { ensureState, getState, saveState } from "./storage.js";
+import { ensureState, getState, saveState } from "./logic/storage.js";
 import {
   advanceTimer,
   acknowledgeSessionAudio,
@@ -18,11 +18,11 @@ import {
   updateTask,
   updateSettings,
   resetSettings
-} from "./actions.js";
+} from "./logic/actions.js";
 import {
   initBlockingNavigation,
   handleBlockingMessage
-} from "./popup/blocking/blockingBackground.js";
+} from "./logic/blocking/blockingBackground.js";
 
 const MISSION_ALARM = "missionTick";
 
@@ -47,14 +47,14 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  handleMessage(message)
+  handleMessage(message, sender)
     .then((data) => sendResponse({ ok: true, data }))
     .catch((error) => sendResponse({ ok: false, error: error.message }));
 
   return true;
 });
 
-async function handleMessage(message) {
+async function handleMessage(message, sender) {
   const type    = message?.type;
   const payload = message?.payload || {};
 
@@ -81,7 +81,7 @@ async function handleMessage(message) {
   // ── Blocking messages ──────────────────────────────────────────────────────
 
   if (type?.startsWith("BLOCKING_")) {
-    return handleBlockingMessage(message);
+    return handleBlockingMessage(message, sender);
   }
 
   throw new Error(`Unknown message type: ${type}`);

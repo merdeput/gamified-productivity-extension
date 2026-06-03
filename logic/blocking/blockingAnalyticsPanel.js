@@ -1,18 +1,15 @@
 /**
- * blockingUI.js
+ * blockingAnalyticsPanel.js
  *
  * UI helpers for the website-blocking feature inside the popup.
  * Call `initBlockingUI(sendMessage)` once from ui.js after DOM is ready.
  *
  * Responsibilities:
- *   1. Keep the blocking-mode <select> in the mission form in sync with the task.
- *   2. Save blockingMode as part of UPDATE_TASK / CREATE_TASK payload.
- *   3. Render the Analytics screen (#analyticsScreen).
- *   4. Wire the "Reset" button on the analytics screen.
+ *   1. Render the Analytics panel inside Settings.
+ *   2. Wire the "Reset" button on the analytics panel.
  */
 
 import {
-  BLOCK_MODES,
   BLOCK_REASONS,
   DEFAULT_BLOCKING_ANALYTICS
 } from "./blockingConstants.js";
@@ -26,7 +23,6 @@ import {
  */
 export function initBlockingUI(sendMessage) {
   _sendMessage = sendMessage;
-  _initBlockingModeSelector();
   _initAnalyticsScreen();
 }
 
@@ -34,52 +30,7 @@ export function initBlockingUI(sendMessage) {
 
 let _sendMessage = null;
 
-// ─── 1. Blocking mode selector ────────────────────────────────────────────────
-
-function _initBlockingModeSelector() {
-  const select  = document.getElementById("blockingModeSelect");
-  const hint    = document.getElementById("blockingModeHint");
-  if (!select || !hint) return;
-
-  const HINTS = {
-    soft: "Soft mode shows a reflection screen and removes 25% of growing flowers for non-productive visits.",
-    hard: "Hard mode completely denies access for non-productive reasons while the session is active."
-  };
-
-  select.addEventListener("change", () => {
-    hint.textContent = HINTS[select.value] || "";
-  });
-}
-
-/**
- * Called by ui.js when it reads task data into the mission form.
- * Sets the blocking mode selector to the task's stored value.
- *
- * @param {string} mode  "soft" | "hard"
- */
-export function setBlockingModeUI(mode) {
-  const select = document.getElementById("blockingModeSelect");
-  if (select) select.value = mode === BLOCK_MODES.HARD ? "hard" : "soft";
-
-  const hint = document.getElementById("blockingModeHint");
-  if (hint) {
-    hint.textContent =
-      mode === BLOCK_MODES.HARD
-        ? "Hard mode completely denies access for non-productive reasons while the session is active."
-        : "Soft mode shows a reflection screen and removes 25% of growing flowers for non-productive visits.";
-  }
-}
-
-/**
- * Called by ui.js when it reads the mission form for saving / creating a task.
- * @returns {"soft" | "hard"}
- */
-export function getBlockingModeFromUI() {
-  const select = document.getElementById("blockingModeSelect");
-  return select?.value === "hard" ? BLOCK_MODES.HARD : BLOCK_MODES.SOFT;
-}
-
-// ─── 2. Analytics screen ──────────────────────────────────────────────────────
+// ─── Analytics panel ──────────────────────────────────────────────────────────
 
 function _initAnalyticsScreen() {
   const resetBtn = document.getElementById("resetAnalyticsBtn");
@@ -92,7 +43,7 @@ function _initAnalyticsScreen() {
 }
 
 /**
- * Render the analytics screen with the given analytics object.
+ * Render the analytics panel with the given analytics object.
  * Call this from ui.js whenever the state is refreshed and the analytics
  * screen is active (or when switching to it).
  *

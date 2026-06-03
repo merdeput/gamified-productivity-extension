@@ -17,7 +17,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["popup/blocking/blocking.html", "popup/blocking/blockingPage.js", "assets/*"],
+      "resources": ["logic/blocking/blockedSitePage.html", "logic/blocking/blockedSitePage.css", "logic/blocking/blockedSitePage.js", "assets/*"],
       "matches": ["<all_urls>"]
     }
   ]

@@ -4,7 +4,7 @@
  */
 
 import { isValidPlant } from './plantGrowth.js';
-import { getState, saveState } from '../../storage.js';
+import { getState, saveState } from '../storage.js';
 
 /**
  * Load garden data from the main application state

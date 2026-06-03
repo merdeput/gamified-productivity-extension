@@ -4,7 +4,7 @@
  */
 
 import { getPlantStage, FLOWER_DEFINITIONS } from './plantGrowth.js';
-import { getState, saveState } from '../../storage.js';
+import { getState, saveState } from '../storage.js';
 
 import { 
   loadGarden, 
