@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fokus — Stay on Track</title>
+  <style>
+    /* ─── Reset & base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #f7f3ec;
+      --surface:      #ffffff;
+      --border:       #ded5c8;
+      --border-green: #b9d8a6;
+      --green:        #316f4a;
+      --green-light:  #ecf8e5;
+      --green-mid:    #3f7653;
+      --text:         #252525;
+      --muted:        #666;
+      --danger:       #b54747;
+      --danger-bg:    #fff0f0;
+      --danger-border:#e8c0c0;
+      --warning:      #8a4d00;
+      --warning-bg:   #fff8ee;
+      --warning-border:#e8d0a0;
+      --coin-bg:      #ecf8e5;
+      --coin-border:  #b9d8a6;
+      --blue:         #315c73;
+      --blue-bg:      #eef7fc;
+      --blue-border:  #b8cfdf;
+
+      --radius:    10px;
+      --radius-sm: 6px;
+      --shadow:    0 4px 24px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.13);
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    /* ─── Layout ───────────────────────────────────────────────────── */
+    .page {
+      width: 100%;
+      max-width: 540px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* ─── Header ───────────────────────────────────────────────────── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .logo { font-size: 1.4rem; font-weight: 900; letter-spacing: 0.05em; color: var(--green); }
+    .mode-badge {
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .mode-badge.soft { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning-border); }
+    .mode-badge.hard { background: var(--danger-bg);  color: var(--danger);  border: 1px solid var(--danger-border); }
+
+    /* ─── Card ─────────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.25rem;
+      box-shadow: var(--shadow);
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+    }
+
+    /* ─── Blocked site banner ──────────────────────────────────────── */
+    .blocked-banner {
+      border-color: var(--danger-border);
+      background: var(--danger-bg);
+    }
+    .blocked-banner .site-name {
+      font-size: 1.05rem;
+      font-weight: bold;
+      color: var(--danger);
+      word-break: break-all;
+    }
+    .blocked-banner .subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* ─── Progress stats ───────────────────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.6rem;
+    }
+    .stat-box {
+      background: var(--green-light);
+      border: 1px solid var(--border-green);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 0.7rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .stat-box .stat-label {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .stat-box .stat-value {
+      font-size: 1.15rem;
+      font-weight: bold;
+      color: var(--green);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+    }
+    .stat-box .stat-sub {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    /* ─── Motivational message ─────────────────────────────────────── */
+    .motivation {
+      border-color: var(--border-green);
+      background: var(--green-light);
+    }
+    .motivation p {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--green);
+      line-height: 1.5;
+    }
+
+    /* ─── Reason selector ──────────────────────────────────────────── */
+    .reason-question {
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 0.75rem;
+      color: var(--text);
+    }
+    .reason-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    .reason-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 0.75rem;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      color: var(--text);
+      font: inherit;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+      text-align: left;
+    }
+    .reason-btn:hover {
+      border-color: var(--green);
+      background: var(--green-light);
+    }
+    .reason-btn.selected {
+      border-color: var(--green);
+      background: var(--green-light);
+      color: var(--green);
+      box-shadow: 0 0 0 3px rgba(49,111,74,0.13);
+    }
+    .reason-btn .emoji { font-size: 1.1rem; flex-shrink: 0; }
+
+    /* ─── Action buttons ───────────────────────────────────────────── */
+    .actions { display: flex; flex-direction: column; gap: 0.55rem; }
+
+    .btn {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      font: inherit;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: opacity 0.15s, box-shadow 0.15s;
+    }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn:not(:disabled):hover { opacity: 0.88; }
+
+    .btn-return {
+      background: var(--green);
+      color: #fff;
+      border-color: var(--green);
+      font-size: 14px;
+      padding: 0.85rem 1rem;
+      box-shadow: 0 2px 8px rgba(49,111,74,0.18);
+    }
+    .btn-proceed {
+      background: var(--surface);
+      color: var(--text);
+      border-color: var(--border);
+    }
+    .btn-denied {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border-color: var(--danger-border);
+      cursor: not-allowed;
+      opacity: 1 !important;
+    }
+
+    /* ─── Coin reward notice ───────────────────────────────────────── */
+    .coin-notice {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 12px;
+      color: var(--green);
+      font-weight: bold;
+      margin-top: -0.2rem;
+    }
+    .coin-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border: 1px solid var(--coin-border);
+      border-radius: 999px;
+      background: var(--coin-bg);
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--green);
+    }
+
+    /* ─── Penalty warning ──────────────────────────────────────────── */
+    .penalty-warning {
+      display: none;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid var(--warning-border);
+      border-radius: var(--radius-sm);
+      background: var(--warning-bg);
+      color: var(--warning);
+      font-size: 12px;
+      font-weight: bold;
+      line-height: 1.4;
+    }
+    .penalty-warning.visible { display: block; }
+
+    /* ─── Denied overlay ───────────────────────────────────────────── */
+    .denied-notice {
+      display: none;
+      padding: 0.75rem;
+      border: 1px solid var(--danger-border);
+      border-radius: var(--radius-sm);
+      background: var(--danger-bg);
+      color: var(--danger);
+      font-size: 13px;
+      font-weight: bold;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .denied-notice.visible { display: block; }
+
+    /* ─── Outcome states ───────────────────────────────────────────── */
+    .outcome-banner {
+      display: none;
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius);
+      text-align: center;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .outcome-banner.success {
+      border: 1px solid var(--border-green);
+      background: var(--green-light);
+      color: var(--green);
+    }
+    .outcome-banner.blocked {
+      border: 1px solid var(--danger-border);
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
+    .outcome-banner.visible { display: block; }
+
+    /* ─── Countdown (hard mode denied) ────────────────────────────── */
+    .countdown-row {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 0.5rem;
+    }
+    .countdown-row.visible { display: flex; }
+    .countdown-timer { font-weight: bold; font-variant-numeric: tabular-nums; }
+
+    /* ─── Analytics panel (collapsed by default) ───────────────────── */
+    .analytics-toggle {
+      font-size: 11px;
+      color: var(--muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+      width: 100%;
+      padding: 0.25rem;
+      text-decoration: underline;
+      font: inherit;
+    }
+    .analytics-panel { display: none; }
+    .analytics-panel.visible { display: block; }
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.45rem;
+    }
+    .analytics-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.4rem 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+    }
+    .analytics-item .a-label { color: var(--muted); }
+    .analytics-item .a-value { font-weight: bold; }
+
+    /* ─── Responsive ───────────────────────────────────────────────── */
+    @media (max-width: 400px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .reason-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="page" id="page">
+
+  <!-- Header -->
+  <div class="header">
+    <span class="logo">FOKUS</span>
+    <span class="mode-badge" id="modeBadge">soft</span>
+  </div>
+
+  <!-- Blocked site banner -->
+  <div class="card blocked-banner">
+    <div class="card-title">Blocked site</div>
+    <div class="site-name" id="siteName">example.com</div>
+    <div class="subtitle" id="blockSubtitle">This site is on your soft-block list.</div>
+  </div>
+
+  <!-- Focus progress (soft mode) -->
+  <div class="card" id="progressCard">
+    <div class="card-title">Your progress today</div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-label">Session</div>
+        <div class="stat-value" id="sessionStat">0 / 0</div>
+        <div class="stat-sub" id="timerModeStat">idle</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Focus today</div>
+        <div class="stat-value" id="focusStat">0 min</div>
+        <div class="stat-sub">total</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Garden</div>
+        <div class="stat-value" id="plantsStat">0 🌱</div>
+        <div class="stat-sub"><span id="coinsStat">0</span> coins</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Motivational message (soft mode only) -->
+  <div class="card motivation" id="motivationCard">
+    <div class="card-title">Keep going</div>
+    <p id="motivationText"></p>
+  </div>
+
+  <!-- Reason selector -->
+  <div class="card" id="reasonCard">
+    <div class="reason-question">Why are you opening this website?</div>
+    <div class="reason-grid" id="reasonGrid">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- Penalty warning (soft, non-productive) -->
+  <div class="penalty-warning" id="penaltyWarning">
+    ⚠️ Proceeding for entertainment or other reasons will remove 25% of your growing flowers.
+  </div>
+
+  <!-- Denied notice (hard mode, non-productive) -->
+  <div class="denied-notice" id="deniedNotice">
+    🚫 Access denied in Hard Mode. You cannot visit this site while your focus session is active.
+  </div>
+
+  <!-- Action buttons -->
+  <div class="actions" id="actionsArea">
+
+    <!-- Return to Focus (always shown initially) -->
+    <button class="btn btn-return" id="returnBtn" type="button">
+      🌿 Return to Focus
+    </button>
+    <div class="coin-notice" id="coinNotice">
+      You'll earn <span class="coin-pill" id="coinRewardPill">+5 coins</span> for resisting!
+    </div>
+
+    <!-- Proceed / Continue -->
+    <button class="btn btn-proceed" id="proceedBtn" type="button" disabled>
+      Continue to site →
+    </button>
+
+  </div>
+
+  <!-- Outcome banners (shown after decision) -->
+  <div class="outcome-banner success" id="successOutcome"></div>
+  <div class="outcome-banner blocked" id="blockedOutcome"></div>
+
+</div>
+
+<script src="blockingPage.js"></script>
+</body>
+</html>

@@ -1,3 +1,5 @@
+import { DEFAULT_BLOCKING_ANALYTICS } from "./popup/blocking/blockingConstants.js";
+
 export const DEFAULT_SETTINGS = {
   defaultWorkMinutes: 20,
   defaultRestMinutes: 3,
@@ -19,7 +21,8 @@ export const DEFAULT_STATE = {
     plants: [],
     coins: 0
   },
-  totalFocusMinutes: 0
+  totalFocusMinutes: 0,
+  blockingAnalytics:  { ...DEFAULT_BLOCKING_ANALYTICS }
 };
 
 export const RUNNING_MODES = ["work", "rest"];

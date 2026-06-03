@@ -19,8 +19,14 @@ import {
   updateSettings,
   resetSettings
 } from "./actions.js";
+import {
+  initBlockingNavigation,
+  handleBlockingMessage
+} from "./popup/blocking/blockingBackground.js";
 
 const MISSION_ALARM = "missionTick";
+
+// ─── Lifecycle ────────────────────────────────────────────────────────────────
 
 chrome.runtime.onInstalled.addListener(async () => {
   await ensureState();
@@ -49,37 +55,42 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 async function handleMessage(message) {
-  const type = message?.type;
+  const type    = message?.type;
   const payload = message?.payload || {};
 
-  if (type === "GET_STATE") {
-    await runStateAction(advanceTimer);
-    return getState();
-  }
 
-  if (type === "CREATE_TASK") return runStateAction((state) => createTask(state, payload));
-  if (type === "UPDATE_TASK") return runStateAction((state) => updateTask(state, payload));
-  if (type === "DELETE_TASK") return runStateAction((state) => deleteTask(state, payload.taskId));
-  if (type === "RESCHEDULE_TASK") return runStateAction((state) => rescheduleTask(state, payload));
-  if (type === "START_MISSION") return runStateAction((state) => startMission(state, payload.taskId));
-  if (type === "PAUSE_MISSION") return runStateAction(pauseMission);
-  if (type === "RESUME_MISSION") return runStateAction(resumeMission);
+  if (type === "GET_STATE")          { await runStateAction(advanceTimer); return getState(); }
+  if (type === "CREATE_TASK")        return runStateAction((state) => createTask(state, payload));
+  if (type === "UPDATE_TASK")        return runStateAction((state) => updateTask(state, payload));
+  if (type === "DELETE_TASK")        return runStateAction((state) => deleteTask(state, payload.taskId));
+  if (type === "RESCHEDULE_TASK")    return runStateAction((state) => rescheduleTask(state, payload));
+  if (type === "START_MISSION")      return runStateAction((state) => startMission(state, payload.taskId));
+  if (type === "PAUSE_MISSION")      return runStateAction(pauseMission);
+  if (type === "RESUME_MISSION")     return runStateAction(resumeMission);
   if (type === "FINISH_WORK_SESSION") return runStateAction(finishWorkSession);
-  if (type === "TAKE_REST") return runStateAction(takeRest);
-  if (type === "SKIP_REST") return runStateAction(skipRest);
-  if (type === "COMPLETE_MISSION") return runStateAction(completeMission);
-  if (type === "RESET_MISSION") return runStateAction((state) => resetMission(state, payload.taskId));
-  if (type === "RESET_TASK") return runStateAction((state) => resetTask(state, payload.taskId));
-  if (type === "CLEAR_RESULT") return runStateAction(clearResult);
-  if (type === "UPDATE_SETTINGS") return runStateAction((state) => updateSettings(state, payload));
-  if (type === "RESET_SETTINGS") return runStateAction(resetSettings);
-  if (type === "ACK_SESSION_AUDIO") return runStateAction((state) => acknowledgeSessionAudio(state, payload.key));
+  if (type === "TAKE_REST")          return runStateAction(takeRest);
+  if (type === "SKIP_REST")          return runStateAction(skipRest);
+  if (type === "COMPLETE_MISSION")   return runStateAction(completeMission);
+  if (type === "RESET_MISSION")      return runStateAction((state) => resetMission(state, payload.taskId));
+  if (type === "RESET_TASK")         return runStateAction((state) => resetTask(state, payload.taskId));
+  if (type === "CLEAR_RESULT")       return runStateAction(clearResult);
+  if (type === "UPDATE_SETTINGS")    return runStateAction((state) => updateSettings(state, payload));
+  if (type === "RESET_SETTINGS")     return runStateAction(resetSettings);
+  if (type === "ACK_SESSION_AUDIO")  return runStateAction((state) => acknowledgeSessionAudio(state, payload.key));
+
+  // ── Blocking messages ──────────────────────────────────────────────────────
+
+  if (type?.startsWith("BLOCKING_")) {
+    return handleBlockingMessage(message);
+  }
 
   throw new Error(`Unknown message type: ${type}`);
 }
 
+// ─── State helpers ────────────────────────────────────────────────────────────
+
 async function runStateAction(action) {
-  const state = await getState();
+  const state  = await getState();
   const result = action(state);
   await saveState(result.state);
   await applyAlarmChange(result.alarm);
@@ -90,8 +101,10 @@ async function applyAlarmChange(alarm) {
   if (alarm === "start") {
     await chrome.alarms.create(MISSION_ALARM, { periodInMinutes: 1 });
   }
-
   if (alarm === "clear") {
     await chrome.alarms.clear(MISSION_ALARM);
   }
 }
+
+// ─── Blocking navigation (webNavigation listener) ─────────────────────────────
+initBlockingNavigation();

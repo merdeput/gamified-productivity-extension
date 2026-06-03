@@ -9,6 +9,12 @@ import {
   validateTaskInput
 } from "../utils.js";
 import { initGarden, refreshGarden } from "./garden/garden.js";
+import {
+  initBlockingUI,
+  setBlockingModeUI,
+  getBlockingModeFromUI,
+  renderAnalytics
+} from "./blocking/blockingUI.js";
 
 const SESSION_AUDIO_PATH = "assets/audios/end-of-session.mp3";
 const AUDIO_ALERT_MAX_AGE_MS = 15000;
@@ -43,6 +49,7 @@ export async function initUI() {
   window.addEventListener("unload", () => {
     if (timerId) clearInterval(timerId);
   });
+  initBlockingUI(sendMessage);
 }
 
 function bindEvents() {
@@ -171,7 +178,7 @@ function buildTaskPayload({ taskId, title, fallbackTask, useTaskFormDeadline }) 
       ? state.settings.defaultTotalSessions
       : Number($("totalSessionsInput")?.value || mission.totalSessions || 2),
     softBlockedSites: useAppDefaults ? [] : parseSiteText($("softBlockedSitesInput")?.value || fallbackTask?.softBlockedSites?.join(", ") || ""),
-    hardBlockedSites: useAppDefaults ? [] : parseSiteText($("hardBlockedSitesInput")?.value || fallbackTask?.hardBlockedSites?.join(", ") || "")
+    hardBlockedSites: useAppDefaults ? [] : parseSiteText($("hardBlockedSitesInput")?.value || fallbackTask?.hardBlockedSites?.join(", ") || ""),
   };
 }
 
@@ -552,6 +559,7 @@ function loadMissionForm(task) {
   $("totalSessionsInput").value = mission.totalSessions || 2;
   $("softBlockedSitesInput").value = (task.softBlockedSites || mission.softBlockedSites || []).join(", ");
   $("hardBlockedSitesInput").value = (task.hardBlockedSites || mission.hardBlockedSites || []).join(", ");
+  setBlockingModeUI(mission.blockingMode || "soft");
 }
 
 function loadSettingsForm() {
@@ -623,7 +631,7 @@ function addDays(date, days) {
 }
 
 function setMissionInputsDisabled(disabled) {
-  ["workDurationInput", "restDurationInput", "totalSessionsInput", "softBlockedSitesInput", "hardBlockedSitesInput", "saveMissionSettingsBtn"].forEach((id) => {
+  ["workDurationInput", "restDurationInput", "totalSessionsInput", "softBlockedSitesInput", "hardBlockedSitesInput", "saveMissionSettingsBtn", "blockingModeSelect"].forEach((id) => {
     $(id).disabled = disabled;
   });
 }
@@ -671,6 +679,10 @@ function showScreen(screenId) {
   });
   
   // Initialize garden when showing garden screen
+    if (screenId === "analyticsScreen") {
+    renderAnalytics(state.blockingAnalytics);
+  }
+
   if (screenId === "gardenScreen") {
     const gardenScreen = $("gardenScreen");
     if (gardenScreen && gardenController === null) {

@@ -3,7 +3,8 @@
   "name": "Fokus",
   "version": "0.5.2",
   "description": "Create focus tasks, run timed missions, earn seeds, and view garden progress placeholders.",
-  "permissions": ["storage", "alarms", "sidePanel"],
+  "permissions": ["storage", "alarms", "sidePanel", "webNavigation", "tabs"],
+  "host_permissions": ["<all_urls>"],
   "action": {
     "default_title": "Fokus"
   },
@@ -13,5 +14,11 @@
   "background": {
     "service_worker": "background.js",
     "type": "module"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["popup/blocking/blocking.html", "popup/blocking/blockingPage.js", "assets/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

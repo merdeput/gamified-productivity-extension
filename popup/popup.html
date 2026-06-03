@@ -73,14 +73,17 @@
       </form>
     </section>
 
-    <nav class="tabs" aria-label="Main areas">
+    <!-- ── Tabs: 4 screens ──────────────────────────────────────────────── -->
+    <nav class="tabs tabs-four" aria-label="Main areas">
       <button class="tab active" data-screen="tasksScreen">Tasks</button>
       <button class="tab" data-screen="missionScreen">Mission</button>
       <button class="tab" data-screen="gardenScreen">Garden</button>
+      <button class="tab" data-screen="analyticsScreen">📊</button>
     </nav>
 
     <p id="statusMessage" class="status" role="status"></p>
 
+    <!-- ── Tasks ──────────────────────────────────────────────────────────── -->
     <section id="tasksScreen" class="screen active">
       <div class="panel compact">
         <div class="panel-header">
@@ -106,6 +109,7 @@
       </div>
     </section>
 
+    <!-- ── Mission ────────────────────────────────────────────────────────── -->
     <section id="missionScreen" class="screen">
       <div class="panel compact">
         <div class="panel-header">
@@ -162,12 +166,25 @@
             </div>
 
             <details class="blocking-details">
-              <summary>Blocked-site placeholders</summary>
+              <summary>Blocked-site settings</summary>
+
+              <!-- ── Blocking mode selector ──────────────────────────────── -->
+              <div class="blocking-mode-row">
+                <label class="blocking-mode-label" for="blockingModeSelect">Blocking mode</label>
+                <select id="blockingModeSelect">
+                  <option value="soft">Soft — reflect &amp; allow with penalty</option>
+                  <option value="hard">Hard — deny non-productive visits</option>
+                </select>
+                <p class="muted blocking-mode-hint" id="blockingModeHint">
+                  Soft mode shows a reflection screen and removes 25% of growing flowers for non-productive visits.
+                </p>
+              </div>
+
               <label for="softBlockedSitesInput">Soft-blocked sites</label>
               <textarea id="softBlockedSitesInput" placeholder="youtube.com, reddit.com"></textarea>
               <label for="hardBlockedSitesInput">Hard-blocked sites</label>
               <textarea id="hardBlockedSitesInput" placeholder="facebook.com, tiktok.com"></textarea>
-              <p class="muted">Saved only. No website blocking runs yet.</p>
+              <p class="muted">Sites are blocked only while this task's focus session is active.</p>
             </details>
           </form>
 
@@ -195,6 +212,7 @@
       </div>
     </section>
 
+    <!-- ── Garden ─────────────────────────────────────────────────────────── -->
     <section id="gardenScreen" class="screen">
       <div class="panel compact">
         <div class="panel-header">
@@ -216,6 +234,57 @@
         </div>
       </div>
     </section>
+
+    <!-- ── Analytics ──────────────────────────────────────────────────────── -->
+    <section id="analyticsScreen" class="screen">
+      <div class="panel compact">
+        <div class="panel-header">
+          <h2>Blocking Analytics</h2>
+          <button id="resetAnalyticsBtn" type="button" class="secondary">Reset</button>
+        </div>
+
+        <div id="analyticsEmpty" class="empty-state hidden">No blocking events recorded yet.</div>
+
+        <!-- Summary stats -->
+        <div class="analytics-summary" id="analyticsSummary">
+          <div class="analytics-stat-grid">
+            <div class="analytics-stat-box" id="aStatAttempts">
+              <div class="analytics-stat-value">0</div>
+              <div class="analytics-stat-label">Attempts</div>
+            </div>
+            <div class="analytics-stat-box analytics-stat-green" id="aStatAllowed">
+              <div class="analytics-stat-value">0</div>
+              <div class="analytics-stat-label">Allowed</div>
+            </div>
+            <div class="analytics-stat-box analytics-stat-red" id="aStatDenied">
+              <div class="analytics-stat-value">0</div>
+              <div class="analytics-stat-label">Denied</div>
+            </div>
+            <div class="analytics-stat-box analytics-stat-blue" id="aStatResistance">
+              <div class="analytics-stat-value">0</div>
+              <div class="analytics-stat-label">Resisted 🌿</div>
+            </div>
+          </div>
+
+          <div class="analytics-row-grid">
+            <div class="analytics-row-item">
+              <span class="analytics-row-label">Coins awarded</span>
+              <span class="analytics-row-value" id="aCoinsAwarded">0</span>
+            </div>
+            <div class="analytics-row-item">
+              <span class="analytics-row-label">Flowers removed</span>
+              <span class="analytics-row-value" id="aFlowersRemoved">0</span>
+            </div>
+          </div>
+
+          <h3 class="analytics-section-title">Reason breakdown</h3>
+          <div class="analytics-reason-list" id="analyticsReasonList">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <script type="module" src="popup.js"></script>
