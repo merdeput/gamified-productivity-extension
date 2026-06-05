@@ -77,6 +77,7 @@ function bindEvents() {
 
   $("taskForm").addEventListener("submit", saveTask);
   $("missionForm").addEventListener("submit", saveMissionSettings);
+  $("blockingForm").addEventListener("submit", saveBlockingSettings);
   $("settingsForm").addEventListener("submit", saveSettings);
   $("settingsToggleBtn").addEventListener("click", toggleSettingsPanel);
   $("settingsCloseBtn").addEventListener("click", closeSettingsPanel);
@@ -86,6 +87,9 @@ function bindEvents() {
   $("testAudioBtn").addEventListener("click", settingsPanel.testAudio);
   blockedSiteEditor.bindControls();
   $("cancelEditBtn").addEventListener("click", resetTaskForm);
+  $("openBlockingDialogBtn").addEventListener("click", openBlockingDialog);
+  $("blockingCloseBtn").addEventListener("click", () => closeBlockingDialog({ discard: true }));
+  $("blockingCancelBtn").addEventListener("click", () => closeBlockingDialog({ discard: true }));
   $("startMissionBtn").addEventListener("click", () => {
     const taskId = getSelectedTaskId();
     if (taskId) sendAction("START_MISSION", { taskId }, "Mission started.");
@@ -157,10 +161,22 @@ async function saveTask(event) {
 
 async function saveMissionSettings(event) {
   event.preventDefault();
+  await saveSelectedTaskSettings("Mission settings saved.");
+}
+
+async function saveBlockingSettings(event) {
+  event.preventDefault();
+  const saved = await saveSelectedTaskSettings("Blocking settings saved.");
+  if (saved) {
+    closeBlockingDialog({ discard: false });
+  }
+}
+
+async function saveSelectedTaskSettings(successMessage) {
   const task = getSelectedTask();
   if (!task) {
     setStatus("Create or select a task first.");
-    return;
+    return false;
   }
 
   const payload = buildTaskPayload({
@@ -173,13 +189,14 @@ async function saveMissionSettings(event) {
   const validationError = getValidationError(payload);
   if (validationError) {
     setStatus(validationError);
-    return;
+    return false;
   }
 
-  const saved = await sendAction("UPDATE_TASK", payload, "Mission settings saved.");
+  const saved = await sendAction("UPDATE_TASK", payload, successMessage);
   if (saved) {
     blockedSiteEditor.markSaved(task.id);
   }
+  return saved;
 }
 
 function buildTaskPayload({ taskId, title, fallbackTask, useTaskFormDeadline }) {
@@ -227,6 +244,29 @@ function toggleSettingsPanel() {
   $("settingsPanel").classList.toggle("hidden", !shouldOpen);
   $("settingsToggleBtn").setAttribute("aria-expanded", String(shouldOpen));
   if (shouldOpen) settingsPanel.loadForm();
+}
+
+function openBlockingDialog() {
+  const task = getSelectedTask();
+  if (!task) {
+    setStatus("Create or select a task first.");
+    return;
+  }
+
+  blockedSiteEditor.loadFromTask(task);
+  $("blockingDialog").classList.remove("hidden");
+  $("openBlockingDialogBtn").setAttribute("aria-expanded", "true");
+  $("blockedSiteInput").focus();
+}
+
+function closeBlockingDialog({ discard }) {
+  $("blockingDialog").classList.add("hidden");
+  $("openBlockingDialogBtn").setAttribute("aria-expanded", "false");
+
+  if (discard) {
+    const task = getSelectedTask();
+    if (task) blockedSiteEditor.loadFromTask(task);
+  }
 }
 
 function closeSettingsPanel() {
@@ -592,13 +632,20 @@ function setMissionInputsDisabled(disabled) {
     "workDurationInput",
     "restDurationInput",
     "totalSessionsInput",
-    "softBlockedSiteInput",
-    "hardBlockedSiteInput",
-    "quickAddSoftSitesBtn",
-    "quickAddHardSitesBtn",
-    "saveMissionSettingsBtn"
+    "openBlockingDialogBtn",
+    "blockedSiteInput",
+    "blockedSiteModeInput",
+    "addBlockedSiteBtn",
+    "quickAddBlockedSitesBtn",
+    "saveMissionSettingsBtn",
+    "saveBlockingSettingsBtn"
   ].forEach((id) => {
-    $(id).disabled = disabled;
+    const element = $(id);
+    if (element) element.disabled = disabled;
+  });
+
+  document.querySelectorAll("#blockedSitesList select, #blockedSitesList button").forEach((element) => {
+    element.disabled = disabled;
   });
 }
 
@@ -674,13 +721,13 @@ function getSettingsValidationError(payload) {
 
 function isEditingMissionForm() {
   if (blockedSiteEditor.hasUnsavedChangesForTask(selectedTaskId)) return true;
-  if ($("blockingDetails").contains(document.activeElement)) return true;
+  if (!$("blockingDialog").classList.contains("hidden")) return true;
   return [
     $("workDurationInput"),
     $("restDurationInput"),
     $("totalSessionsInput"),
-    $("softBlockedSiteInput"),
-    $("hardBlockedSiteInput")
+    $("blockedSiteInput"),
+    $("blockedSiteModeInput")
   ].includes(document.activeElement);
 }
 

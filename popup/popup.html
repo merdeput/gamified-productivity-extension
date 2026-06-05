@@ -158,20 +158,22 @@
 
         <div id="missionEmpty" class="empty-state">Select a task to set up a mission.</div>
 
-        <div id="activeMissionPanel" class="active-mission-panel hidden">
-          <div class="panel-header">
+        <div id="activeMissionPanel" class="active-mission-inline hidden">
+          <div class="active-mission-main">
             <div>
-              <p class="eyebrow">Current Active Mission</p>
+              <p class="eyebrow">Active mission</p>
               <h3 id="activeMissionTitle">Untitled task</h3>
             </div>
-            <span id="activeMissionMode" class="mode-pill">idle</span>
+            <div class="active-mission-meta">
+              <span id="activeMissionMode" class="mode-pill">idle</span>
+              <strong id="activeMissionRemaining">00:00</strong>
+            </div>
           </div>
-          <div class="active-mission-grid">
+          <div class="active-mission-subrow">
             <span id="activeMissionSession" class="muted">Session 0 / 0</span>
-            <strong id="activeMissionRemaining">00:00</strong>
+            <span class="muted">Complete or reset it before starting another.</span>
           </div>
-          <p class="muted">Complete or reset this mission before starting another.</p>
-          <div class="actions">
+          <div class="actions active-mission-actions">
             <button id="viewActiveMissionBtn" type="button" class="secondary">View Active Mission</button>
             <button id="completeActiveMissionBtn" type="button" class="primary">Complete Active Mission</button>
             <button id="resetActiveMissionBtn" type="button" class="danger">Reset Active Mission</button>
@@ -200,38 +202,55 @@
               </label>
             </div>
 
-            <details id="blockingDetails" class="blocking-details">
-              <summary>Blocked-site settings</summary>
-
-              <div class="blocked-site-sections">
-                <section class="blocked-site-section">
-                  <div class="blocked-site-section-head">
-                    <h3>Soft-blocked sites</h3>
-                    <button id="quickAddSoftSitesBtn" type="button" class="secondary">Quick add</button>
-                  </div>
-                  <input id="softBlockedSiteInput" type="text" inputmode="url" placeholder="youtube.com" />
-                  <div id="softBlockedSitesList" class="blocked-site-list" aria-live="polite"></div>
-                  <p class="muted">Redirects to the reflection flow, then allows continue when supported.</p>
-                </section>
-
-                <section class="blocked-site-section">
-                  <div class="blocked-site-section-head">
-                    <h3>Hard-blocked sites</h3>
-                    <button id="quickAddHardSitesBtn" type="button" class="secondary">Quick add</button>
-                  </div>
-                  <input id="hardBlockedSiteInput" type="text" inputmode="url" placeholder="facebook.com" />
-                  <div id="hardBlockedSitesList" class="blocked-site-list" aria-live="polite"></div>
-                  <p class="muted">Redirects to the block flow and does not allow easy bypass while active.</p>
-                </section>
+            <div class="mission-row blocking-summary-row">
+              <div>
+                <span class="section-label">Blocking</span>
+                <p id="blockedSitesSummary" class="muted">No blocked sites</p>
               </div>
-
-              <p class="muted">Sites are blocked only while this task's focus session is active.</p>
-            </details>
+              <button id="openBlockingDialogBtn" type="button" class="secondary" aria-expanded="false">Configure Blocking</button>
+            </div>
 
             <div class="preset-row" aria-label="Save mission settings">
               <button id="saveMissionSettingsBtn" type="submit" class="secondary">Save Settings</button>
             </div>
           </form>
+
+          <div id="blockingDialog" class="blocking-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="blockingDialogTitle">
+            <div class="blocking-sheet">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Selected task</p>
+                  <h3 id="blockingDialogTitle">Blocking</h3>
+                </div>
+                <button id="blockingCloseBtn" class="icon-button" type="button" aria-label="Close blocking settings" title="Close blocking settings">&times;</button>
+              </div>
+
+              <form id="blockingForm" class="blocking-editor stack">
+                <div class="blocking-add-row">
+                  <label>
+                    Website
+                    <input id="blockedSiteInput" type="text" inputmode="url" placeholder="youtube.com" />
+                  </label>
+                  <label>
+                    Mode
+                    <select id="blockedSiteModeInput">
+                      <option value="soft">Soft</option>
+                      <option value="hard">Hard</option>
+                    </select>
+                  </label>
+                  <button id="addBlockedSiteBtn" type="button" class="secondary">Add</button>
+                  <button id="quickAddBlockedSitesBtn" type="button" class="secondary">Quick add</button>
+                </div>
+
+                <div id="blockedSitesList" class="blocked-site-list" aria-live="polite"></div>
+
+                <div class="actions">
+                  <button id="saveBlockingSettingsBtn" class="primary" type="submit">Save Blocking</button>
+                  <button id="blockingCancelBtn" type="button" class="secondary">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
 
           <div class="timer-box">
             <div class="timer-row">
