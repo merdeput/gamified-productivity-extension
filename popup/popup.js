@@ -457,7 +457,7 @@ function renderMission() {
   $("missionContent").classList.toggle("hidden", !hasTask);
 
   if (!hasTask) {
-    $("selectedTaskStatus").textContent = "No task";
+    $("selectedTaskStatus").textContent = "";
     renderActiveMissionPanel(null);
     return;
   }
