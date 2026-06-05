@@ -48,8 +48,12 @@ body {
 
 .topbar {
   flex: 0 0 auto;
-  flex-wrap: wrap;
-  margin-bottom: clamp(0.5rem, 1.8vw, 0.75rem);
+  flex-wrap: nowrap;
+  margin-bottom: clamp(0.4rem, 1.4vw, 0.6rem);
+}
+
+.topbar > div:first-child {
+  min-width: 0;
 }
 
 .topbar-actions {
@@ -66,13 +70,15 @@ p {
 }
 
 h1 {
-  margin-bottom: 2px;
-  font-size: clamp(1.15rem, 5vw, 1.55rem);
+  margin-bottom: 0;
+  font-size: clamp(1.05rem, 4.2vw, 1.35rem);
+  line-height: 1;
 }
 
 h2 {
-  margin-bottom: clamp(0.45rem, 1.6vw, 0.7rem);
-  font-size: clamp(1.5rem, 3.2vw, 3rem);
+  margin-bottom: clamp(0.35rem, 1.3vw, 0.55rem);
+  font-size: clamp(1.05rem, 3vw, 1.25rem);
+  line-height: 1.2;
 }
 
 h3 {
@@ -88,20 +94,27 @@ h3 {
   font-size: 12px;
 }
 
-.coin-pill {
-  display: grid;
-  place-items: center;
+.coin-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
   min-width: max-content;
-  padding: 0.45rem 0.6rem;
-  border: 1px solid #b9d8a6;
-  border-radius: 8px;
-  background: #ecf8e5;
+  min-height: 2.15rem;
+  padding: 0 0.2rem;
+  color: #28563b;
+  font-size: 13px;
   font-weight: bold;
+  font-variant-numeric: tabular-nums;
 }
 
-.coin-pill span:last-child {
-  font-size: 11px;
-  font-weight: normal;
+.coin-icon {
+  width: 0.72rem;
+  height: 0.72rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #d8ac2f;
+  box-shadow: inset 0 0 0 2px rgba(255, 244, 184, 0.65);
+  color: transparent;
 }
 
 .tabs {
@@ -166,16 +179,31 @@ textarea:disabled {
   min-height: 0;
 }
 
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+  background: rgba(37, 37, 37, 0.26);
+}
+
+.settings-overlay.hidden {
+  display: none;
+}
+
 .settings-panel {
-  flex: 0 0 auto;
   display: grid;
+  align-content: start;
   gap: 0.55rem;
-  margin-bottom: clamp(0.45rem, 1.5vw, 0.6rem);
-  padding: clamp(0.6rem, 2vw, 0.85rem);
-  border: 1px solid #ded5c8;
-  border-radius: 8px;
+  width: min(100%, 24rem);
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: clamp(0.75rem, 2.6vw, 1rem);
+  border-left: 1px solid #ded5c8;
   background: #fff;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  box-shadow: -10px 0 28px rgba(0, 0, 0, 0.16);
 }
 
 .settings-panel h2 {
@@ -228,6 +256,18 @@ textarea:disabled {
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 0.1rem;
+}
+
+.screen-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.screen-heading h2 {
+  margin-bottom: 0;
 }
 
 .panel {
@@ -295,6 +335,42 @@ textarea {
   flex: 1 1 min(100%, 6.4rem);
 }
 
+.task-form {
+  grid-template-columns: minmax(0, 1fr) minmax(7.7rem, 0.5fr);
+  align-items: end;
+  column-gap: clamp(0.45rem, 1.5vw, 0.65rem);
+  row-gap: 0.35rem;
+  padding-bottom: clamp(0.55rem, 1.8vw, 0.75rem);
+  border-bottom: 1px solid #e9dfd2;
+}
+
+.task-form input[type="hidden"] {
+  display: none;
+}
+
+.task-form label[for="taskTitleInput"],
+#taskTitleInput {
+  grid-column: 1;
+}
+
+.task-form label[for="deadlineDateInput"] {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+#deadlineDateInput {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.task-form .actions {
+  grid-column: 1 / -1;
+}
+
+.task-list-wrap {
+  min-width: 0;
+}
+
 .task-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
@@ -307,10 +383,14 @@ textarea {
   display: grid;
   gap: 0.45rem;
   min-width: 0;
-  padding: clamp(0.45rem, 1.4vw, 0.65rem);
-  border: 1px solid #ded5c8;
-  border-radius: 8px;
-  background: #fbfaf7;
+  padding: clamp(0.45rem, 1.4vw, 0.65rem) 0 0;
+  border-top: 1px solid #ded5c8;
+  background: transparent;
+}
+
+.date-column:first-child {
+  padding-top: 0;
+  border-top: 0;
 }
 
 .date-column-title {
@@ -353,7 +433,7 @@ textarea {
   min-height: 3rem;
   border: 1px dashed #ded5c8;
   border-radius: 7px;
-  background: #fffdf9;
+  background: transparent;
 }
 
 .task-item,
@@ -707,12 +787,40 @@ progress {
   font-weight: bold;
 }
 
-.status {
-  flex: 0 0 auto;
-  min-height: 1.2rem;
-  margin-bottom: 6px;
-  color: #8a4d00;
+.toast-host {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(0.65rem, 2.5vw, 1rem);
+  z-index: 50;
+  display: grid;
+  justify-items: center;
+  width: min(calc(100% - 1rem), 28rem);
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.toast-host:empty {
+  display: none;
+}
+
+.toast {
+  max-width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  background: #252525;
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
   font-size: 12px;
+  font-weight: bold;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.toast-exit {
+  opacity: 0;
+  transform: translateY(6px);
 }
 
 .hidden {
@@ -782,7 +890,15 @@ body.dark-theme .date-column-title span {
   color: #b8c0c5;
 }
 
-body.dark-theme .coin-pill,
+body.dark-theme .coin-inline {
+  color: #bde2c7;
+}
+
+body.dark-theme .coin-icon {
+  background: #d9b64d;
+  box-shadow: inset 0 0 0 2px rgba(255, 237, 158, 0.55);
+}
+
 body.dark-theme .reward-notice {
   border-color: #4d7e5d;
   background: #263b2d;
@@ -795,7 +911,6 @@ body.dark-theme .session-alert {
   color: #bcdceb;
 }
 
-body.dark-theme .date-column,
 body.dark-theme .date-empty,
 body.dark-theme .task-item,
 body.dark-theme .garden-placeholder,
@@ -810,11 +925,24 @@ body.dark-theme .blocking-add-row {
   border-color: #3c4348;
 }
 
+body.dark-theme .task-form,
+body.dark-theme .date-column {
+  border-color: #3c4348;
+}
+
+body.dark-theme .date-empty {
+  background: transparent;
+}
+
 body.dark-theme .active-mission-inline {
   border-bottom-color: #4d7e5d;
 }
 
 body.dark-theme .blocking-dialog {
+  background: rgba(0, 0, 0, 0.48);
+}
+
+body.dark-theme .settings-overlay {
   background: rgba(0, 0, 0, 0.48);
 }
 
@@ -883,6 +1011,12 @@ body.dark-theme .date-drop-zone.drag-over {
   background: #263b2d;
 }
 
+body.dark-theme .toast {
+  border-color: #505960;
+  background: #f0f2f3;
+  color: #171a1d;
+}
+
 @media (max-width: 460px) {
   .blocking-add-row {
     grid-template-columns: minmax(0, 1fr) minmax(5.3rem, 0.45fr);
@@ -916,7 +1050,20 @@ body.dark-theme .date-drop-zone.drag-over {
     grid-template-columns: 1fr;
   }
 
-  .coin-pill,
+  .task-form {
+    grid-template-columns: 1fr;
+  }
+
+  .task-form label[for="taskTitleInput"],
+  .task-form label[for="deadlineDateInput"],
+  #taskTitleInput,
+  #deadlineDateInput,
+  .task-form .actions {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .coin-inline,
   .badge,
   .mode-pill {
     justify-self: start;

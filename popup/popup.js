@@ -26,6 +26,7 @@ import {
 
 const SESSION_AUDIO_PATH = "assets/audios/end-of-session.mp3";
 const AUDIO_ALERT_MAX_AGE_MS = 15000;
+const STATUS_TOAST_DURATION_MS = 3600;
 
 let state = {
   tasks: [],
@@ -42,6 +43,7 @@ let gardenController = null;
 let selectedTaskId = "";
 let missionViewMode = "compact";
 let timerId = null;
+let statusToastTimer = null;
 let refreshInFlight = false;
 let refreshQueued = false;
 const attemptedAudioKeys = new Set();
@@ -67,6 +69,7 @@ export async function initUI() {
   timerId = setInterval(refreshState, 1000);
   window.addEventListener("unload", () => {
     if (timerId) clearInterval(timerId);
+    if (statusToastTimer) clearTimeout(statusToastTimer);
   });
   initBlockingUI(sendMessage);
 }
@@ -82,6 +85,14 @@ function bindEvents() {
   $("settingsForm").addEventListener("submit", saveSettings);
   $("settingsToggleBtn").addEventListener("click", toggleSettingsPanel);
   $("settingsCloseBtn").addEventListener("click", closeSettingsPanel);
+  $("settingsOverlay").addEventListener("click", (event) => {
+    if (event.target === $("settingsOverlay")) closeSettingsPanel();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !$("settingsOverlay").classList.contains("hidden")) {
+      closeSettingsPanel();
+    }
+  });
   $("resetSettingsBtn").addEventListener("click", resetSettings);
   $("analyticsToggleBtn").addEventListener("click", toggleAnalyticsPanel);
   $("audioVolumeInput").addEventListener("input", settingsPanel.renderAudioVolumeValue);
@@ -242,11 +253,13 @@ async function resetSettings() {
 }
 
 function toggleSettingsPanel() {
-  const shouldOpen = $("settingsPanel").classList.contains("hidden");
-  if (shouldOpen) resetMissionViewModeAndRender();
-  $("settingsPanel").classList.toggle("hidden", !shouldOpen);
+  const shouldOpen = $("settingsOverlay").classList.contains("hidden");
+  $("settingsOverlay").classList.toggle("hidden", !shouldOpen);
   $("settingsToggleBtn").setAttribute("aria-expanded", String(shouldOpen));
-  if (shouldOpen) settingsPanel.loadForm();
+  if (shouldOpen) {
+    settingsPanel.loadForm();
+    $("settingsCloseBtn").focus();
+  }
 }
 
 function openBlockingDialog() {
@@ -274,8 +287,9 @@ function closeBlockingDialog({ discard }) {
 }
 
 function closeSettingsPanel() {
-  $("settingsPanel").classList.add("hidden");
+  $("settingsOverlay").classList.add("hidden");
   $("settingsToggleBtn").setAttribute("aria-expanded", "false");
+  $("settingsToggleBtn").focus();
 }
 
 function toggleAnalyticsPanel() {
@@ -592,17 +606,7 @@ async function processSessionAudioAlert() {
 }
 
 function renderGardenPlaceholder() {
-  const coins = state.garden?.coins || 0;
-
   const gardenScreen = $("gardenScreen");
-
-  if (gardenScreen) {
-    const coinsEl = gardenScreen.querySelector("#gardenCoins");
-
-    if (coinsEl) {
-      coinsEl.textContent = `${coins} coin${coins === 1 ? "" : "s"}`;
-    }
-  }
 
   if (gardenController === null) {
     initGardenView(gardenScreen);
@@ -802,7 +806,37 @@ function reconcileSelectedTask() {
 }
 
 function setStatus(message) {
-  $("statusMessage").textContent = message || "";
+  const host = $("toastHost");
+  if (!host) return;
+
+  if (statusToastTimer) {
+    clearTimeout(statusToastTimer);
+    statusToastTimer = null;
+  }
+
+  host.innerHTML = "";
+
+  if (!message) {
+    host.classList.remove("visible");
+    return;
+  }
+
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.textContent = message;
+  host.appendChild(toast);
+  host.classList.add("visible");
+
+  statusToastTimer = setTimeout(() => {
+    host.classList.remove("visible");
+    toast.classList.add("toast-exit");
+    setTimeout(() => {
+      if (toast.parentNode === host) {
+        host.removeChild(toast);
+      }
+    }, 180);
+    statusToastTimer = null;
+  }, STATUS_TOAST_DURATION_MS);
 }
 
 initUI();

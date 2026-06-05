@@ -13,17 +13,18 @@
         <h1>FOKUS</h1>
       </div>
       <div class="topbar-actions">
-        <div class="coin-pill">
-          <span id="coinCount">0</span>
-          <span>coins</span>
+        <div class="coin-inline" aria-label="Coins">
+          <span class="coin-icon" aria-hidden="true"></span>
+          <span id="coinCount"></span>
         </div>
-        <button id="settingsToggleBtn" class="icon-button" type="button" aria-label="Settings" aria-expanded="false" title="Settings">&#9881;</button>
+        <button id="settingsToggleBtn" class="icon-button" type="button" aria-label="Settings" aria-controls="settingsPanel" aria-expanded="false" title="Settings">&#9881;</button>
       </div>
     </header>
 
-    <section id="settingsPanel" class="settings-panel hidden" aria-label="Settings">
+    <div id="settingsOverlay" class="settings-overlay hidden">
+    <section id="settingsPanel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
       <div class="panel-header">
-        <h2>Settings</h2>
+        <h2 id="settingsTitle">Settings</h2>
         <button id="settingsCloseBtn" class="icon-button" type="button" aria-label="Close settings" title="Close settings">&times;</button>
       </div>
       <form id="settingsForm" class="stack">
@@ -112,6 +113,7 @@
         </div>
       </form>
     </section>
+    </div>
 
     <!-- ── Tabs: 4 screens ──────────────────────────────────────────────── -->
     <nav class="tabs" aria-label="Main areas">
@@ -120,30 +122,28 @@
       <button class="tab" data-screen="gardenScreen">Garden</button>
     </nav>
 
-    <p id="statusMessage" class="status" role="status"></p>
+    <div id="toastHost" class="toast-host" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <!-- ── Tasks ──────────────────────────────────────────────────────────── -->
     <section id="tasksScreen" class="screen active">
-      <div class="panel compact">
-        <div class="panel-header">
-          <h2>Task Setup</h2>
-          <span id="taskCount" class="muted">0 tasks</span>
-        </div>
-        <form id="taskForm" class="stack">
-          <input id="taskIdInput" type="hidden" />
-          <label for="taskTitleInput">Task title</label>
-          <input id="taskTitleInput" type="text" placeholder="Study German vocabulary" required />
-          <label for="deadlineDateInput">Deadline</label>
-          <input id="deadlineDateInput" type="date" />
-          <div class="actions">
-            <button class="primary" type="submit">Save Task</button>
-            <button id="cancelEditBtn" type="button" class="secondary hidden">Cancel</button>
-          </div>
-        </form>
+      <div class="screen-heading">
+        <h2>Tasks</h2>
+        <span id="taskCount" class="muted">0 tasks</span>
       </div>
 
-      <div class="panel compact">
-        <h2>Tasks</h2>
+      <form id="taskForm" class="task-form stack">
+        <input id="taskIdInput" type="hidden" />
+        <label for="taskTitleInput">Task title</label>
+        <input id="taskTitleInput" type="text" placeholder="Study German vocabulary" required />
+        <label for="deadlineDateInput">Deadline</label>
+        <input id="deadlineDateInput" type="date" />
+        <div class="actions">
+          <button class="primary" type="submit">Save Task</button>
+          <button id="cancelEditBtn" type="button" class="secondary hidden">Cancel</button>
+        </div>
+      </form>
+
+      <div class="task-list-wrap">
         <div id="taskList" class="task-list"></div>
       </div>
     </section>
@@ -289,7 +289,6 @@
       <div class="panel compact">
         <div class="panel-header">
           <h2>Garden</h2>
-          <span id="gardenCoins" class="muted"> </span>
         </div>
         <div id="gardenContainer" class="garden-container hidden">
           <div id="mapLayer" class="map-layer"></div>
