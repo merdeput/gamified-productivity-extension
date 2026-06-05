@@ -40,6 +40,7 @@ let state = {
 
 let gardenController = null;
 let selectedTaskId = "";
+let missionViewMode = "compact";
 let timerId = null;
 let refreshInFlight = false;
 let refreshQueued = false;
@@ -90,6 +91,7 @@ function bindEvents() {
   $("openBlockingDialogBtn").addEventListener("click", openBlockingDialog);
   $("blockingCloseBtn").addEventListener("click", () => closeBlockingDialog({ discard: true }));
   $("blockingCancelBtn").addEventListener("click", () => closeBlockingDialog({ discard: true }));
+  $("collapseActiveMissionViewBtn").addEventListener("click", collapseActiveMissionView);
   $("startMissionBtn").addEventListener("click", () => {
     const taskId = getSelectedTaskId();
     if (taskId) sendAction("START_MISSION", { taskId }, "Mission started.");
@@ -241,12 +243,14 @@ async function resetSettings() {
 
 function toggleSettingsPanel() {
   const shouldOpen = $("settingsPanel").classList.contains("hidden");
+  if (shouldOpen) resetMissionViewModeAndRender();
   $("settingsPanel").classList.toggle("hidden", !shouldOpen);
   $("settingsToggleBtn").setAttribute("aria-expanded", String(shouldOpen));
   if (shouldOpen) settingsPanel.loadForm();
 }
 
 function openBlockingDialog() {
+  resetMissionViewModeAndRender();
   const task = getSelectedTask();
   if (!task) {
     setStatus("Create or select a task first.");
@@ -277,6 +281,7 @@ function closeSettingsPanel() {
 function toggleAnalyticsPanel() {
   const panel = $("settingsAnalyticsPanel");
   const shouldShow = panel.classList.contains("hidden");
+  if (shouldShow) resetMissionViewModeAndRender();
   panel.classList.toggle("hidden", !shouldShow);
   $("analyticsToggleBtn").textContent = shouldShow ? "Hide Analytics" : "Show Analytics";
   $("analyticsToggleBtn").setAttribute("aria-expanded", String(shouldShow));
@@ -402,11 +407,13 @@ function createTaskCard(task) {
   item.addEventListener("dragend", () => item.classList.remove("dragging"));
   item.addEventListener("click", (event) => {
     if (event.target.closest("button")) return;
+    resetMissionViewMode();
     selectedTaskId = selectedTaskId === task.id ? null : task.id;
     render();
   });
 
   item.querySelector('[data-action="select"]').addEventListener("click", () => {
+    resetMissionViewMode();
     selectedTaskId = task.id;
     loadMissionForm(task);
     render();
@@ -414,6 +421,7 @@ function createTaskCard(task) {
   });
   item.querySelector('[data-action="edit"]').addEventListener("click", () => editTask(task));
   item.querySelector('[data-action="reset"]').addEventListener("click", () => {
+    resetMissionViewMode();
     selectedTaskId = task.id;
     sendAction("RESET_TASK", { taskId: task.id }, "Task and mission reset.");
   });
@@ -451,21 +459,35 @@ function bindDropZone(dropZone) {
 }
 
 function renderMission() {
-  const task = getSelectedTask();
-  const hasTask = Boolean(task);
-  $("missionEmpty").classList.toggle("hidden", hasTask);
-  $("missionContent").classList.toggle("hidden", !hasTask);
+  if (missionViewMode === "active" && !state.activeMission) {
+    resetMissionViewMode();
+  }
 
-  if (!hasTask) {
+  const selectedTask = getSelectedTask();
+  const task = missionViewMode === "active" ? getActiveTask() : selectedTask;
+  const hasDisplayTask = Boolean(task);
+  $("missionEmpty").classList.toggle("hidden", hasDisplayTask);
+  $("missionContent").classList.toggle("hidden", !hasDisplayTask);
+
+  if (!hasDisplayTask) {
     $("selectedTaskStatus").textContent = "";
-    renderActiveMissionPanel(null);
+    $("collapseActiveMissionViewBtn").classList.add("hidden");
+    renderActiveMissionPanel(selectedTask);
     return;
   }
 
-  const mission = getVisibleMission();
+  if (missionViewMode === "active" && state.activeMission?.taskId !== task.id) {
+    resetMissionViewMode();
+    renderMission();
+    return;
+  }
+
+  const mission = getVisibleMission(task);
+  const isActiveMissionView = missionViewMode === "active" && state.activeMission?.taskId === task.id;
   $("selectedTaskStatus").textContent = task.status;
   $("missionTitle").textContent = task.title;
-  renderActiveMissionPanel(task);
+  $("collapseActiveMissionViewBtn").classList.toggle("hidden", !isActiveMissionView);
+  renderActiveMissionPanel(missionViewMode === "active" ? task : selectedTask);
 
   if (!isEditingMissionForm()) {
     loadMissionForm(task);
@@ -602,6 +624,7 @@ async function initGardenView(gardenScreen) {
 }
 
 function editTask(task) {
+  resetMissionViewMode();
   selectedTaskId = task.id;
   $("taskIdInput").value = task.id;
   $("taskTitleInput").value = task.title;
@@ -670,19 +693,43 @@ function viewActiveMission() {
   const activeTask = getActiveTask();
   if (!activeTask) return;
 
-  selectedTaskId = activeTask.id;
+  missionViewMode = "active";
   loadMissionForm(activeTask);
   render();
   showScreen("missionScreen");
 }
 
-function getVisibleMission() {
-  const task = getSelectedTask();
+function collapseActiveMissionView() {
+  resetMissionViewMode();
+  render();
+}
+
+function resetMissionViewModeAndRender() {
+  const didReset = resetMissionViewMode();
+  $("collapseActiveMissionViewBtn").classList.add("hidden");
+  if (didReset) renderMission();
+}
+
+function resetMissionViewMode() {
+  if (missionViewMode !== "active") return false;
+
+  missionViewMode = "compact";
+  return true;
+}
+
+function getVisibleMission(task = getSelectedTask()) {
   if (state.activeMission?.taskId === task?.id) return state.activeMission;
   return task?.mission || null;
 }
 
 function showScreen(screenId) {
+  const currentScreenId = document.querySelector(".screen.active")?.id || "";
+  const shouldResetMissionView = screenId !== "missionScreen" || currentScreenId !== "missionScreen";
+
+  if (shouldResetMissionView) {
+    resetMissionViewModeAndRender();
+  }
+
   document.querySelectorAll(".screen").forEach((screen) => {
     screen.classList.toggle("active", screen.id === screenId);
   });

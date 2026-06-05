@@ -182,8 +182,16 @@
 
         <div id="missionContent" class="hidden">
           <div class="mission-head">
-            <p class="eyebrow"></p>
-            <h3 id="missionTitle">Untitled task</h3>
+            <div class="mission-title-row">
+              <div>
+                <p class="eyebrow"></p>
+                <h3 id="missionTitle">Untitled task</h3>
+              </div>
+              <button id="collapseActiveMissionViewBtn" class="mission-collapse-btn hidden" type="button" aria-label="Return to compact mission form" title="Return to compact mission form" style="font-size: 8px;">
+                <!-- <span aria-hidden="true">&#8249;</span> -->
+                <span>compact</span>
+              </button>
+            </div>
           </div>
 
           <form id="missionForm" class="stack">

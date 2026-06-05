@@ -481,6 +481,49 @@ textarea {
   min-width: 0;
 }
 
+.mission-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.mission-title-row > div {
+  min-width: 0;
+}
+
+.mission-collapse-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  min-height: 1.85rem;
+  padding: 0.25rem 0.5rem;
+  border-color: #ded5c8;
+  background: #f3f0ea;
+  color: #5a5144;
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.mission-collapse-btn span:first-child {
+  font-size: 1.1rem;
+  line-height: 0.8;
+}
+
+.mission-collapse-btn:hover,
+.mission-collapse-btn:focus-visible {
+  border-color: #bfb5a7;
+  background: #eee8dd;
+  color: #252525;
+  outline: none;
+}
+
 .eyebrow {
   margin-bottom: 2px;
   color: #666;
@@ -819,6 +862,19 @@ body.dark-theme .mode-pill {
 
 body.dark-theme .section-label {
   color: #7a8791;
+}
+
+body.dark-theme .mission-collapse-btn {
+  border-color: #505960;
+  background: #30363a;
+  color: #d9dfe2;
+}
+
+body.dark-theme .mission-collapse-btn:hover,
+body.dark-theme .mission-collapse-btn:focus-visible {
+  border-color: #69747c;
+  background: #3a4146;
+  color: #f0f2f3;
 }
 
 body.dark-theme .date-drop-zone.drag-over {
