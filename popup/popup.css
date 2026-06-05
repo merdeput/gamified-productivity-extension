@@ -398,9 +398,11 @@ textarea {
 
 .active-mission-meta strong {
   color: #28563b;
-  font-size: clamp(1.1rem, 5vw, 1.6rem);
+  font-size: clamp(4rem, 22vw, 8rem);
+  font-weight: bold;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
-}
+} 
 
 .active-mission-subrow {
   justify-content: flex-start;
