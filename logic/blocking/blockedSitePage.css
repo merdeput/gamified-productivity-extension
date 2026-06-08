@@ -69,6 +69,48 @@ body {
 .mode-badge.soft { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning-border); }
 .mode-badge.hard { background: var(--danger-bg);  color: var(--danger);  border: 1px solid var(--danger-border); }
 
+/* --- Frog mascot -------------------------------------------------- */
+#frogMascotWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--green-light);
+  border: 1px solid var(--border-green);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+#frogSprite {
+  /* Size is set inline by JS (FROG_FRAME_SIZE × FROG_SCALE) */
+  flex-shrink: 0;
+  /* Subtle bounce idle animation so it feels alive even between state changes */
+  animation: frog-bob 2.4s ease-in-out infinite;
+}
+
+@keyframes frog-bob {
+  0%,  100% { transform: translateY(0);   }
+  50%        { transform: translateY(-3px); }
+}
+
+.frog-mascot-caption {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--green);
+  line-height: 1.45;
+  flex: 1;
+  min-width: 0;
+}
+
+.frog-mascot-caption small {
+  display: block;
+  font-size: 11px;
+  font-weight: normal;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
 /* --- Card --------------------------------------------------------- */
 .card {
   background: var(--surface);
@@ -349,4 +391,5 @@ body {
 @media (max-width: 400px) {
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .reason-grid { grid-template-columns: 1fr; }
+  #frogMascotWrapper { flex-direction: column; text-align: center; }
 }

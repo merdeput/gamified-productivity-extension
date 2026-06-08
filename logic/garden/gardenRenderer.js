@@ -115,6 +115,16 @@ export async function renderMap(container) {
 
     plantLayer.style.width = `${containerWidth}px`;
     plantLayer.style.height = `${containerHeight}px`;
+
+    // Keep the animal layer perfectly aligned with the map
+    const animalLayer = document.getElementById('animalLayer');
+    if (animalLayer) {
+      animalLayer.style.left      = '50%';
+      animalLayer.style.top       = '50%';
+      animalLayer.style.transform = 'translate(-50%, -50%)';
+      animalLayer.style.width     = `${containerWidth}px`;
+      animalLayer.style.height    = `${containerHeight}px`;
+    }
     
     // Create tiles for the first visible layer (usually the base layer)
     const renderLayers = mapData.layers.filter(layer =>
@@ -234,12 +244,16 @@ export function renderPlants(plantLayer, plants, totalFocusMinutes) {
       try {
         const stage = getPlantStage(plant, totalFocusMinutes);
         const sprite = getPlantSprite(plant.type, stage);
+        const scale = 1;
+        const scaledWidth = sprite.spriteWidth * scale;
+        const scaledHeight = sprite.spriteHeight * scale;
 
         // Calculate plant position (centered on tile)
         const tileCenterX = plant.tileX * tileSize + tileSize / 2;
         const tileCenterY = plant.tileY * tileSize + tileSize / 2;
-        const plantRenderX = tileCenterX - sprite.spriteWidth / 2;
-        const plantRenderY = tileCenterY - sprite.spriteHeight / 2;
+
+        const plantRenderX = tileCenterX - scaledWidth / 2;
+        const plantRenderY = tileCenterY - scaledHeight / 2;
         
         // Create plant element
         const plantEl = document.createElement('div');
@@ -250,10 +264,11 @@ export function renderPlants(plantLayer, plants, totalFocusMinutes) {
         plantEl.title = `${plant.type} (${sprite.stageName})`;
         
         // Position the plant
+
         plantEl.style.left = `${plantRenderX}px`;
         plantEl.style.top = `${plantRenderY}px`;
-        plantEl.style.width = `${sprite.spriteWidth}px`;
-        plantEl.style.height = `${sprite.spriteHeight}px`;
+        plantEl.style.width = `${scaledWidth}px`;
+        plantEl.style.height = `${scaledHeight}px`;
         
         // Set sprite image
         plantEl.style.backgroundImage = `url('${sprite.url}')`;
@@ -261,7 +276,7 @@ export function renderPlants(plantLayer, plants, totalFocusMinutes) {
         // For sprite sheets, set the background position to show the correct frame
         const bgPos = getSpriteBackgroundPosition(sprite);
         plantEl.style.backgroundPosition = bgPos;
-        plantEl.style.backgroundSize = `${sprite.stageCount * sprite.spriteWidth}px ${sprite.spriteHeight}px`;
+        plantEl.style.backgroundSize = `${sprite.stageCount * scaledWidth}px ${scaledHeight}px`;
         
         plantLayer.appendChild(plantEl);
       } catch (error) {

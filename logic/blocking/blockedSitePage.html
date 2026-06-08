@@ -15,6 +15,19 @@
     <span class="mode-badge" id="modeBadge">soft</span>
   </div>
 
+  <!--
+    Frog mascot wrapper.
+    The <div id="frogSprite"> is injected here by blockedSitePage.js.
+    The caption below is always present in the HTML.
+  -->
+  <div id="frogMascotWrapper">
+    <!-- #frogSprite inserted by JS -->
+    <div class="frog-mascot-caption">
+      Hey! This site is blocked.
+      <small>Your frog friend is rooting for you 🐸</small>
+    </div>
+  </div>
+
   <!-- Blocked site banner -->
   <div class="card blocked-banner">
     <div class="card-title">Blocked site</div>
@@ -38,7 +51,7 @@
       </div>
       <div class="stat-box">
         <div class="stat-label">Garden</div>
-        <div class="stat-value" id="plantsStat">0 ðŸŒ±</div>
+        <div class="stat-value" id="plantsStat">0 🌱</div>
         <div class="stat-sub"><span id="coinsStat">0</span> coins</div>
       </div>
     </div>
@@ -95,4 +108,3 @@
 <script src="blockedSitePage.js"></script>
 </body>
 </html>
-

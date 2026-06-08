@@ -6,10 +6,10 @@
 import { getPlantStage, FLOWER_DEFINITIONS } from './plantGrowth.js';
 import { getState, saveState } from '../storage.js';
 
-import { 
-  loadGarden, 
-  saveGarden, 
-  addPlant, 
+import {
+  loadGarden,
+  saveGarden,
+  addPlant,
   updateCoins,
   removePlant,
   getPlantsAtTile
@@ -22,6 +22,10 @@ import {
   isPlantableTile,
   getMapDimensions
 } from './gardenRenderer.js';
+import { GardenAnimals } from './gardenAnimals.js';
+
+// Module-level reference so we can destroy on teardown
+let _animalManager = null;
 
 /**
  * Initialize the garden view
@@ -31,38 +35,58 @@ import {
  */
 export async function initGarden(container, state) {
   const gardenContainer = container.querySelector('#gardenContainer');
-  const mapLayer = container.querySelector('#mapLayer');
-  const plantLayer = container.querySelector('#plantLayer');
-  const loadingEl = container.querySelector('#gardenLoading');
-  const actionsEl = container.querySelector('#gardenActions');
-  const flowerStore = container.querySelector('#flowerStore');
-  const gardenCoinsEl = container.querySelector('#gardenCoins');
-  const gardenInfoEl = container.querySelector('#gardenInfo');
-  
+  const mapLayer        = container.querySelector('#mapLayer');
+  const plantLayer      = container.querySelector('#plantLayer');
+  const animalLayer     = container.querySelector('#animalLayer');
+  const loadingEl       = container.querySelector('#gardenLoading');
+  const actionsEl       = container.querySelector('#gardenActions');
+  const flowerStore     = container.querySelector('#flowerStore');
+  const gardenCoinsEl   = container.querySelector('#gardenCoins');
+  const gardenInfoEl    = container.querySelector('#gardenInfo');
+
   try {
     // Load map data
     await loadMapData();
-    
+
     // Render the map
     await renderMap(mapLayer);
-    
+
     // Hide loading, show garden
     loadingEl?.classList.add('hidden');
     gardenContainer?.classList.remove('hidden');
     actionsEl?.classList.remove('hidden');
-    
+
     // Load and render plants
     const gardenState = await loadGarden();
     updateGardenDisplay(container, gardenState, state);
-    
+
+    // ── Spawn frog ──────────────────────────────────────────────────────────
+    // Destroy any previous manager (e.g. garden re-opened without full teardown)
+    if (_animalManager) {
+      _animalManager.destroy();
+      _animalManager = null;
+    }
+
+    const baseUrl  = chrome.runtime.getURL('assets/');
+    const mapDims  = getMapDimensions();
+    // animalLayer is a separate div above plantLayer so plant re-renders
+    // (which do plantLayer.innerHTML = '') never wipe the frog
+    _animalManager = new GardenAnimals(animalLayer, mapDims, baseUrl);
+    _animalManager.spawnFrog();
+    // ── End frog ────────────────────────────────────────────────────────────
+
     // Setup event listeners
     setupGardenEvents(mapLayer, plantLayer, container, state);
-    
+
     return {
-      refresh: (currentState) => refreshGarden(container, currentState),
-      getState: () => loadGarden()
+      refresh:  (currentState) => refreshGarden(container, currentState),
+      getState: () => loadGarden(),
+      destroy:  () => {
+        _animalManager?.destroy();
+        _animalManager = null;
+      },
     };
-    
+
   } catch (error) {
     console.error('Failed to initialize garden:', error);
     loadingEl.textContent = 'Failed to load garden. Please check the console.';
@@ -71,21 +95,17 @@ export async function initGarden(container, state) {
 
 /**
  * Setup event listeners for garden interactions
- * @param {HTMLElement} mapLayer - Map layer element
- * @param {HTMLElement} plantLayer - Plant layer element
- * @param {HTMLElement} container - Garden container
- * @param {Object} state - Application state
  */
 function setupGardenEvents(mapLayer, plantLayer, container, state) {
-  const plantButton = container.querySelector('#plantTestRoseBtn');
-  const flowerStore = container.querySelector('#flowerStore');
+  const plantButton     = container.querySelector('#plantTestRoseBtn');
+  const flowerStore     = container.querySelector('#flowerStore');
   const flowerOptionsDiv = flowerStore?.querySelector('.flower-options');
-  const gardenInfoEl = container.querySelector('#gardenInfo');
-  
-  let plantingMode = false;
+  const gardenInfoEl    = container.querySelector('#gardenInfo');
+
+  let plantingMode      = false;
   let selectedFlowerType = null;
   let selectedFlowerName = null;
-  
+
   // Generate store buttons from FLOWER_DEFINITIONS
   if (flowerOptionsDiv) {
     flowerOptionsDiv.innerHTML = '';
@@ -95,24 +115,22 @@ function setupGardenEvents(mapLayer, plantLayer, container, state) {
       btn.dataset.flowerType = flower.type;
       btn.type = 'button';
       btn.title = flower.description;
-      
-      // Create preview with sprite
+
       const preview = document.createElement('div');
       preview.className = 'flower-preview';
       const spriteUrl = chrome.runtime.getURL(`assets/plants/${flower.filename}`);
       preview.style.backgroundImage = `url('${spriteUrl}')`;
-      // Show the mature stage (last frame)
       const matureFrame = flower.stages - 1;
       preview.style.backgroundPosition = `-${matureFrame * 16}px 0px`;
       preview.style.backgroundSize = `${flower.stages * 16}px 16px`;
-      
+
       const label = document.createElement('div');
       label.className = 'flower-label';
       label.textContent = `${flower.name} (${flower.price})`;
-      
+
       btn.appendChild(preview);
       btn.appendChild(label);
-      
+
       btn.addEventListener('click', () => {
         selectedFlowerType = flower.type;
         selectedFlowerName = flower.name;
@@ -120,15 +138,14 @@ function setupGardenEvents(mapLayer, plantLayer, container, state) {
         btn.classList.add('selected');
         gardenInfoEl.textContent = `Click a plantable tile to plant a ${flower.name}.`;
       });
-      
+
       flowerOptionsDiv.appendChild(btn);
     });
   }
-  
-  // Plant flower button - show store
+
+  // Plant flower button — show store
   plantButton?.addEventListener('click', () => {
     if (!plantingMode) {
-      // Show store
       plantingMode = true;
       selectedFlowerType = null;
       selectedFlowerName = null;
@@ -137,7 +154,6 @@ function setupGardenEvents(mapLayer, plantLayer, container, state) {
       flowerStore?.classList.remove('hidden');
       gardenInfoEl.textContent = 'Select a flower to plant, then click a tile.';
     } else {
-      // Exit store
       plantingMode = false;
       selectedFlowerType = null;
       selectedFlowerName = null;
@@ -148,140 +164,95 @@ function setupGardenEvents(mapLayer, plantLayer, container, state) {
       flowerOptionsDiv?.querySelectorAll('.flower-option').forEach(b => b.classList.remove('selected'));
     }
   });
-  
+
   // Click handler for planting
   mapLayer?.addEventListener('click', async (event) => {
-  if (!plantingMode || !selectedFlowerType) return;
+    if (!plantingMode || !selectedFlowerType) return;
 
-  const tile = getTileFromEvent(event, mapLayer);
-  if (!tile) {
-    gardenInfoEl.textContent = 'That tile is not plantable. Please choose another.';
-    return;
-  }
-
-  try {
-    // Always load latest garden state
-    let gardenState = await loadGarden();
-
-    // Check occupied tile
-    const existingPlants = getPlantsAtTile(
-      gardenState,
-      tile.tileX,
-      tile.tileY
-    );
-
-    if (existingPlants.length > 0) {
-      gardenInfoEl.textContent = 'This tile already has a plant!';
+    const tile = getTileFromEvent(event, mapLayer);
+    if (!tile) {
+      gardenInfoEl.textContent = 'That tile is not plantable. Please choose another.';
       return;
     }
 
-    // Flower cost
-    const flowerDef = FLOWER_DEFINITIONS.find(
-      f => f.type === selectedFlowerType
-    );
+    try {
+      let gardenState = await loadGarden();
 
-    const cost = flowerDef?.price || 10;
-    const currentCoins = gardenState.coins || 0;
+      const existingPlants = getPlantsAtTile(gardenState, tile.tileX, tile.tileY);
+      if (existingPlants.length > 0) {
+        gardenInfoEl.textContent = 'This tile already has a plant!';
+        return;
+      }
 
-    if (currentCoins < cost) {
-      gardenInfoEl.textContent =
-        `Not enough coins! Need ${cost}, have ${currentCoins}.`;
-      return;
+      const flowerDef    = FLOWER_DEFINITIONS.find(f => f.type === selectedFlowerType);
+      const cost         = flowerDef?.price || 10;
+      const currentCoins = gardenState.coins || 0;
+
+      if (currentCoins < cost) {
+        gardenInfoEl.textContent = `Not enough coins! Need ${cost}, have ${currentCoins}.`;
+        return;
+      }
+
+      const currentState = await getState();
+      console.log("currstate =", state);
+      const plant = createPlant(
+        selectedFlowerType,
+        tile.tileX,
+        tile.tileY,
+        currentState.totalFocusMinutes || 0,
+        60
+      );
+
+      console.log("current focus:", state.totalFocusMinutes, "plant focus:", plant.plantedAtFocusMinutes);
+
+      gardenState = await addPlant(plant);
+      gardenState = await updateCoins(-cost);
+      state.garden = gardenState;
+
+      updateGardenDisplay(container, gardenState, state);
+
+      const plantedName = selectedFlowerName;
+      plantingMode       = false;
+      selectedFlowerType = null;
+      selectedFlowerName = null;
+
+      plantButton.textContent = 'Plant Flower';
+      plantButton.classList.remove('active');
+      flowerStore?.classList.add('hidden');
+      flowerOptionsDiv?.querySelectorAll('.flower-option').forEach(b => b.classList.remove('selected'));
+
+      gardenInfoEl.textContent = `Planted a ${plantedName} at (${tile.tileX}, ${tile.tileY})! (-${cost} coins)`;
+
+    } catch (error) {
+      console.error('Failed to plant:', error);
+      gardenInfoEl.textContent = 'Failed to plant. Please try again.';
     }
-
-    // Create plant
-    const currentState = await getState();
-    console.log("currstate =", state);
-    const plant = createPlant(
-      selectedFlowerType,
-      tile.tileX,
-      tile.tileY,
-      currentState.totalFocusMinutes || 0,
-      60
-    );
-
-    console.log(
-      "current focus:",
-      state.totalFocusMinutes,
-      "plant focus:",
-      plant.plantedAtFocusMinutes
-    );
-
-    // Add plant
-    gardenState = await addPlant(plant);
-
-    // Deduct coins
-    gardenState = await updateCoins(-cost);
-
-    // Keep popup state in sync
-    state.garden = gardenState;
-
-    // Update UI
-    updateGardenDisplay(container, gardenState, state);
-
-    // Exit planting mode
-    const plantedName = selectedFlowerName;
-
-    plantingMode = false;
-    selectedFlowerType = null;
-    selectedFlowerName = null;
-
-    plantButton.textContent = 'Plant Flower';
-    plantButton.classList.remove('active');
-
-    flowerStore?.classList.add('hidden');
-
-    flowerOptionsDiv
-      ?.querySelectorAll('.flower-option')
-      .forEach(b => b.classList.remove('selected'));
-
-    gardenInfoEl.textContent =
-      `Planted a ${plantedName} at (${tile.tileX}, ${tile.tileY})! (-${cost} coins)`;
-
-  } catch (error) {
-    console.error('Failed to plant:', error);
-    gardenInfoEl.textContent =
-      'Failed to plant. Please try again.';
-  }
-});
+  });
 }
 
 /**
  * Create a new plant object
- * @param {string} type - Plant type (rose, dandelion, etc.)
- * @param {number} tileX - Tile X coordinate
- * @param {number} tileY - Tile Y coordinate
- * @param {number} totalFocusMinutes - Current total focus minutes
- * @returns {Object} Plant object
  */
 function createPlant(type, tileX, tileY, totalFocusMinutes, growDurationMins) {
   return {
     id: `plant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    type: type,
-    tileX: tileX,
-    tileY: tileY,
+    type,
+    tileX,
+    tileY,
     plantedAtFocusMinutes: totalFocusMinutes || 0,
-    growDurationMinutes: growDurationMins // Default 60 minute growth cycle
+    growDurationMinutes:   growDurationMins,
   };
 }
 
 /**
  * Update the garden display
- * @param {HTMLElement} container - Garden container
- * @param {Object} gardenState - Garden state from storage
- * @param {Object} appState - Application state
  */
 function updateGardenDisplay(container, gardenState, appState) {
-  const plantLayer = container.querySelector('#plantLayer');
-  const gardenCoinsEl = container.querySelector('#gardenCoins');
-  
-  // Render plants
+  const plantLayer       = container.querySelector('#plantLayer');
   const totalFocusMinutes = appState?.totalFocusMinutes || 0;
   console.log("Focus = ", totalFocusMinutes);
   renderPlants(plantLayer, gardenState.plants || [], totalFocusMinutes);
-  
-  // Update coin display
-  updateCoinDisplays(container, gardenState.coins || 0)
+  updateCoinDisplays(container, gardenState.coins || 0);
 }
 
 function updateCoinDisplays(container, coins) {
@@ -293,9 +264,6 @@ function updateCoinDisplays(container, coins) {
 
 /**
  * Refresh the garden view
- * @param {HTMLElement} container - Garden container
- * @param {Object} state - Current application state
- * @returns {Promise<void>}
  */
 export async function refreshGarden(container, state) {
   try {
@@ -309,8 +277,6 @@ export async function refreshGarden(container, state) {
 
 /**
  * Remove a plant from the garden
- * @param {string} plantId - ID of plant to remove
- * @returns {Promise<Object>} Updated garden state
  */
 export async function removeGardenPlant(plantId) {
   try {
@@ -324,5 +290,5 @@ export async function removeGardenPlant(plantId) {
 export default {
   initGarden,
   refreshGarden,
-  removeGardenPlant
+  removeGardenPlant,
 };
