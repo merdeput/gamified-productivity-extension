@@ -141,7 +141,7 @@ function setupGardenEvents(mapLayer, plantLayer, container, state) {
       plantingMode = false;
       selectedFlowerType = null;
       selectedFlowerName = null;
-      plantButton.textContent = 'Plant a Flower';
+      plantButton.textContent = 'Plant Flower';
       plantButton.classList.remove('active');
       flowerStore?.classList.add('hidden');
       gardenInfoEl.textContent = '';
@@ -226,7 +226,7 @@ function setupGardenEvents(mapLayer, plantLayer, container, state) {
     selectedFlowerType = null;
     selectedFlowerName = null;
 
-    plantButton.textContent = 'Plant a Flower';
+    plantButton.textContent = 'Plant Flower';
     plantButton.classList.remove('active');
 
     flowerStore?.classList.add('hidden');

@@ -12,6 +12,7 @@ export function createSettingsPanel({ $, getSettings, sendAction, closePanel, se
     $("compactModeInput").checked = settings.compactMode !== false;
     $("themeInput").value = settings.theme === "dark" ? "dark" : "light";
     $("audioVolumeInput").value = settings.audioVolume ?? 100;
+    $("quickAddBlockedSitesInput").value = formatSiteList(settings.quickAddBlockedSites);
     renderAudioVolumeValue();
   }
 
@@ -23,7 +24,8 @@ export function createSettingsPanel({ $, getSettings, sendAction, closePanel, se
       showCompletedTasks: $("showCompletedTasksInput").checked,
       compactMode: $("compactModeInput").checked,
       theme: $("themeInput").value,
-      audioVolume: Number($("audioVolumeInput").value)
+      audioVolume: Number($("audioVolumeInput").value),
+      quickAddBlockedSites: $("quickAddBlockedSitesInput").value
     };
   }
 
@@ -65,4 +67,10 @@ export function createSettingsPanel({ $, getSettings, sendAction, closePanel, se
 export function getAudioVolume(value) {
   const volume = Number(value);
   return Number.isFinite(volume) ? Math.min(100, Math.max(0, volume)) / 100 : 1;
+}
+
+function formatSiteList(value) {
+  return (Array.isArray(value) ? value : [])
+    .filter(Boolean)
+    .join("\n");
 }

@@ -1,5 +1,13 @@
 import { DEFAULT_BLOCKING_ANALYTICS } from "./blocking/blockingConstants.js";
 
+export const DEFAULT_QUICK_ADD_BLOCKED_SITES = [
+  "youtube.com",
+  "facebook.com",
+  "instagram.com",
+  "x.com",
+  "threads.com"
+];
+
 export const DEFAULT_SETTINGS = {
   defaultWorkMinutes: 20,
   defaultRestMinutes: 3,
@@ -7,7 +15,8 @@ export const DEFAULT_SETTINGS = {
   showCompletedTasks: true,
   compactMode: true,
   theme: "dark",
-  audioVolume: 100
+  audioVolume: 100,
+  quickAddBlockedSites: [...DEFAULT_QUICK_ADD_BLOCKED_SITES]
 };
 
 export const DEFAULT_STATE = {

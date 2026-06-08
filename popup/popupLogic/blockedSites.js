@@ -1,8 +1,7 @@
 import { cleanSite } from "../../logic/utils.js";
+import { DEFAULT_QUICK_ADD_BLOCKED_SITES } from "../../logic/constants.js";
 
-const COMMON_BLOCKED_SITES = ["youtube.com", "facebook.com", "instagram.com", "x.com", "reddit.com"];
-
-export function createBlockedSiteEditor({ $, getSelectedTaskId }) {
+export function createBlockedSiteEditor({ $, getSelectedTaskId, getQuickAddSites }) {
   let draft = [];
   let draftTaskId = "";
   let isDirty = false;
@@ -56,7 +55,11 @@ export function createBlockedSiteEditor({ $, getSelectedTaskId }) {
   }
 
   function addCommonSites(mode) {
-    const changed = COMMON_BLOCKED_SITES
+    const configuredSites = getQuickAddSites?.();
+    const quickAddSites = Array.isArray(configuredSites)
+      ? normalizeSites(configuredSites)
+      : DEFAULT_QUICK_ADD_BLOCKED_SITES;
+    const changed = quickAddSites
       .map((site) => addSite(mode, site, false))
       .some(Boolean);
     if (changed) render();

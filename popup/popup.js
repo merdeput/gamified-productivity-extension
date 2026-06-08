@@ -51,7 +51,8 @@ const attemptedAudioKeys = new Set();
 const $ = (id) => document.getElementById(id);
 const blockedSiteEditor = createBlockedSiteEditor({
   $,
-  getSelectedTaskId: () => selectedTaskId
+  getSelectedTaskId: () => selectedTaskId,
+  getQuickAddSites: () => state.settings?.quickAddBlockedSites
 });
 const settingsPanel = createSettingsPanel({
   $,
@@ -791,6 +792,7 @@ function isEditingSettingsForm() {
     $("compactModeInput"),
     $("themeInput"),
     $("audioVolumeInput"),
+    $("quickAddBlockedSitesInput"),
     $("testAudioBtn")
   ].includes(document.activeElement);
 }

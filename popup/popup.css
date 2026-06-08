@@ -248,6 +248,16 @@ textarea:disabled {
   flex: 0 0 auto;
 }
 
+.quick-add-settings textarea {
+  min-height: 5.8rem;
+  line-height: 1.35;
+}
+
+.quick-add-settings .muted {
+  font-weight: normal;
+  line-height: 1.35;
+}
+
 .screen.active {
   display: grid;
   gap: clamp(0.55rem, 1.8vw, 0.75rem);

@@ -204,6 +204,7 @@ export function validateSettingsInput(payload = {}) {
   const defaultRestMinutes   = positiveNumber(payload.defaultRestMinutes);
   const defaultTotalSessions = positiveInteger(payload.defaultTotalSessions);
   const audioVolume          = Number(payload.audioVolume);
+  const quickAddBlockedSites = [...new Set(normalizeSiteList(payload.quickAddBlockedSites))];
  
   if (!defaultWorkMinutes)   throw new Error("Default work duration must be a positive number.");
   if (!defaultRestMinutes)   throw new Error("Default rest duration must be a positive number.");
@@ -219,7 +220,8 @@ export function validateSettingsInput(payload = {}) {
     showCompletedTasks: payload.showCompletedTasks !== false,
     compactMode:        payload.compactMode !== false,
     theme:              payload.theme === "dark" ? "dark" : "light",
-    audioVolume
+    audioVolume,
+    quickAddBlockedSites
   };
 }
  
