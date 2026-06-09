@@ -1,12 +1,24 @@
 {
   "manifest_version": 3,
   "name": "Fokus",
-  "version": "0.5.2",
-  "description": "Create focus tasks, run timed missions, earn seeds, and view garden progress placeholders.",
+  "version": "1.0.0",
+  "description": "Create focus tasks, run timed missions, earn seeds, and view garden progress.",
   "permissions": ["storage", "alarms", "sidePanel", "webNavigation", "tabs"],
   "host_permissions": ["<all_urls>"],
+    "icons": {
+    "16": "assets/frog_logo.png",
+    "32": "assets/frog_logo.png",
+    "48": "assets/frog_logo.png",
+    "128": "assets/frog_logo.png"
+  },
   "action": {
-    "default_title": "Fokus"
+    "default_title": "Fokus",
+    "default_icon": {
+      "16": "assets/frog_logo.png",
+      "32": "assets/frog_logo.png",
+      "48": "assets/frog_logo.png",
+      "128": "assets/frog_logo.png"
+    }
   },
   "side_panel": {
     "default_path": "popup/popup.html"
