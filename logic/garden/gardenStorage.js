@@ -1,202 +1,63 @@
 /**
- * Garden storage module
- * Uses the application's main state as the single source of truth.
+ * Garden storage facade.
+ *
+ * The GardenRepository owns persistence and is ready for multiple gardens.
+ * These functions preserve the existing garden module API.
  */
 
-import { isValidPlant } from './plantGrowth.js';
-import { getState, saveState } from '../storage.js';
+import { Garden } from './gardenModel.js';
+import { gardenRepository } from './gardenRepository.js';
+import { Plant } from './plant.js';
 
-/**
- * Load garden data from the main application state
- */
-export async function loadGarden() {
-  try {
-    const state = await getState();
+export async function loadGarden(gardenId) {
+  return gardenRepository.loadGarden(gardenId);
+}
 
-    const garden = {
-      plants: Array.isArray(state.garden?.plants)
-        ? state.garden.plants.filter(isValidPlant)
-        : [],
-      coins: Math.max(0, Number(state.garden?.coins || 0))
-    };
+export async function saveGarden(gardenState, gardenId) {
+  const garden = gardenState instanceof Garden ? gardenState : new Garden(gardenState);
+  return gardenRepository.saveGarden(garden, gardenId || garden.id);
+}
 
-    return garden;
-  } catch (error) {
-    console.error('Failed to load garden:', error);
+export async function addPlant(plantData, gardenId) {
+  return gardenRepository.updateGarden((garden) => {
+    garden.addPlant(plantData);
+  }, gardenId);
+}
 
-    return {
-      plants: [],
-      coins: 0
-    };
+export async function removePlant(plantId, gardenId) {
+  return gardenRepository.updateGarden((garden) => {
+    garden.removePlant(plantId);
+  }, gardenId);
+}
+
+export async function updatePlant(plantId, updates, gardenId) {
+  return gardenRepository.updateGarden((garden) => {
+    garden.updatePlant(plantId, updates);
+  }, gardenId);
+}
+
+export async function updateCoins(amount, gardenId) {
+  return gardenRepository.updateGarden((garden) => {
+    garden.updateCoins(amount);
+  }, gardenId);
+}
+
+export async function getPlant(plantId, gardenId) {
+  const garden = await loadGarden(gardenId);
+  return garden.plants.find(plant => plant.id === plantId) || null;
+}
+
+export function getPlantsAtTile(gardenOrTileX, tileXOrTileY, maybeTileY) {
+  if (gardenOrTileX instanceof Garden || Array.isArray(gardenOrTileX?.plants)) {
+    const garden = gardenOrTileX instanceof Garden ? gardenOrTileX : new Garden(gardenOrTileX);
+    return garden.getPlantsAtTile(tileXOrTileY, maybeTileY);
   }
+
+  return loadGarden().then(garden => garden.getPlantsAtTile(gardenOrTileX, tileXOrTileY));
 }
 
-/**
- * Save garden data into the main application state
- */
-export async function saveGarden(gardenState) {
-  try {
-    const state = await getState();
-
-    state.garden = {
-      plants: Array.isArray(gardenState?.plants)
-        ? gardenState.plants.filter(isValidPlant)
-        : [],
-      coins: Math.max(0, Number(gardenState?.coins || 0))
-    };
-
-    await saveState(state);
-  } catch (error) {
-    console.error('Failed to save garden:', error);
-    throw error;
-  }
-}
-
-/**
- * Add a plant
- */
-export async function addPlant(plantData) {
-  try {
-    if (!isValidPlant(plantData)) {
-      throw new Error('Invalid plant data');
-    }
-
-    const state = await getState();
-
-    state.garden ??= {
-      plants: [],
-      coins: 0
-    };
-
-    state.garden.plants.push(plantData);
-
-    await saveState(state);
-
-    return state.garden;
-  } catch (error) {
-    console.error('Failed to add plant:', error);
-    throw error;
-  }
-}
-
-/**
- * Remove a plant
- */
-export async function removePlant(plantId) {
-  try {
-    const state = await getState();
-
-    state.garden ??= {
-      plants: [],
-      coins: 0
-    };
-
-    state.garden.plants =
-      (state.garden.plants || []).filter(
-        plant => plant.id !== plantId
-      );
-
-    await saveState(state);
-
-    return state.garden;
-  } catch (error) {
-    console.error('Failed to remove plant:', error);
-    throw error;
-  }
-}
-
-/**
- * Update a plant
- */
-export async function updatePlant(plantId, updates) {
-  try {
-    const state = await getState();
-
-    state.garden ??= {
-      plants: [],
-      coins: 0
-    };
-
-    state.garden.plants =
-      (state.garden.plants || []).map(plant => {
-        if (plant.id !== plantId) {
-          return plant;
-        }
-
-        const updatedPlant = {
-          ...plant,
-          ...updates,
-          id: plant.id
-        };
-
-        if (!isValidPlant(updatedPlant)) {
-          throw new Error(
-            `Invalid plant update for ${plantId}`
-          );
-        }
-
-        return updatedPlant;
-      });
-
-    await saveState(state);
-
-    return state.garden;
-  } catch (error) {
-    console.error('Failed to update plant:', error);
-    throw error;
-  }
-}
-
-/**
- * Update coins
- */
-export async function updateCoins(amount) {
-  try {
-    const state = await getState();
-
-    state.garden ??= {
-      plants: [],
-      coins: 0
-    };
-
-    state.garden.coins = Math.max(
-      0,
-      Number(state.garden.coins || 0) + amount
-    );
-
-    await saveState(state);
-
-    return state.garden;
-  } catch (error) {
-    console.error('Failed to update coins:', error);
-    throw error;
-  }
-}
-
-/**
- * Find plant by id
- */
-export async function getPlant(plantId) {
-  const garden = await loadGarden();
-
-  return (
-    garden.plants.find(
-      plant => plant.id === plantId
-    ) || null
-  );
-}
-
-/**
- * Find plants at tile
- */
-export async function getPlantsAtTile(tileX, tileY) {
-  const garden = await loadGarden();
-
-  return garden.plants.filter(
-    plant =>
-      plant.tileX === tileX &&
-      plant.tileY === tileY
-  );
+export function createPlant(type, tileX, tileY, totalFocusMinutes = 0, options = {}) {
+  return Plant.create(type, tileX, tileY, totalFocusMinutes, options).serialize();
 }
 
 export default {
@@ -207,5 +68,6 @@ export default {
   updatePlant,
   updateCoins,
   getPlant,
-  getPlantsAtTile
+  getPlantsAtTile,
+  createPlant
 };

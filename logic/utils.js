@@ -100,6 +100,12 @@ export function normalizeState(stored = {}) {
   const tasks         = Array.isArray(stored.tasks) ? stored.tasks.map(normalizeTask) : [];
   const activeMission = stored.activeMission ? normalizeMission(stored.activeMission, null) : null;
  
+  const garden = normalizeGardenState(stored.garden || DEFAULT_STATE.garden, DEFAULT_STATE.garden);
+  const gardens = normalizeGardensState(stored.gardens, garden);
+  const activeGardenId = typeof stored.activeGardenId === "string" && stored.activeGardenId
+    ? stored.activeGardenId
+    : DEFAULT_STATE.activeGardenId;
+
   return {
     tasks,
     activeMission,
@@ -107,10 +113,9 @@ export function normalizeState(stored = {}) {
     sessionAlert:      stored.sessionAlert      || null,
     audioPlayedKeys:   Array.isArray(stored.audioPlayedKeys) ? stored.audioPlayedKeys : [],
     settings:          normalizeSettings(stored.settings),
-    garden: {
-      ...DEFAULT_STATE.garden,
-      ...(stored.garden || {})
-    },
+    garden,
+    gardens,
+    activeGardenId,
     totalFocusMinutes: Math.max(0, Number(stored.totalFocusMinutes || 0)),
     // Preserve blocking analytics; merge with defaults so new keys are always present
     blockingAnalytics: {
@@ -121,6 +126,48 @@ export function normalizeState(stored = {}) {
         ...DEFAULT_BLOCKING_ANALYTICS.reasonCounts,
         ...((stored.blockingAnalytics || {}).reasonCounts || {})
       }
+    }
+  };
+}
+
+function normalizeGardensState(value, legacyGarden) {
+  const source = value && typeof value === "object" ? value : {};
+  const entries = Object.entries(source);
+  const gardens = entries.reduce((result, [gardenId, garden]) => {
+    result[gardenId] = normalizeGardenState(garden, {
+      ...DEFAULT_STATE.gardens.default,
+      id: gardenId
+    });
+    return result;
+  }, {});
+
+  return {
+    ...gardens,
+    default: normalizeGardenState({
+      ...(gardens.default || {}),
+      plants: legacyGarden.plants,
+      coins: legacyGarden.coins
+    }, {
+      ...DEFAULT_STATE.gardens.default,
+      plants: legacyGarden.plants,
+      coins: legacyGarden.coins
+    })
+  };
+}
+
+function normalizeGardenState(value = {}, defaults = DEFAULT_STATE.gardens.default) {
+  return {
+    ...defaults,
+    ...(value || {}),
+    plants: Array.isArray(value?.plants) ? value.plants : defaults.plants || [],
+    coins: Math.max(0, Number(value?.coins ?? defaults.coins ?? 0)),
+    unlocks: {
+      ...(defaults.unlocks || {}),
+      ...(value?.unlocks || {})
+    },
+    upgrades: {
+      ...(defaults.upgrades || {}),
+      ...(value?.upgrades || {})
     }
   };
 }

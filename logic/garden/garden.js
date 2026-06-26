@@ -3,23 +3,21 @@
  * Orchestrates garden functionality: loading, rendering, and interaction
  */
 
-import { getPlantStage, FLOWER_DEFINITIONS } from './plantGrowth.js';
-import { getState, saveState } from '../storage.js';
+import { FLOWER_DEFINITIONS } from './plantGrowth.js';
+import { getState } from '../storage.js';
 
 import {
   loadGarden,
   saveGarden,
-  addPlant,
-  updateCoins,
   removePlant,
-  getPlantsAtTile
+  getPlantsAtTile,
+  createPlant
 } from './gardenStorage.js';
 import {
   loadMapData,
   renderMap,
   renderPlants,
   getTileFromEvent,
-  isPlantableTile,
   getMapDimensions
 } from './gardenRenderer.js';
 import { GardenAnimals } from './gardenAnimals.js';
@@ -36,13 +34,9 @@ let _animalManager = null;
 export async function initGarden(container, state) {
   const gardenContainer = container.querySelector('#gardenContainer');
   const mapLayer        = container.querySelector('#mapLayer');
-  const plantLayer      = container.querySelector('#plantLayer');
   const animalLayer     = container.querySelector('#animalLayer');
   const loadingEl       = container.querySelector('#gardenLoading');
   const actionsEl       = container.querySelector('#gardenActions');
-  const flowerStore     = container.querySelector('#flowerStore');
-  const gardenCoinsEl   = container.querySelector('#gardenCoins');
-  const gardenInfoEl    = container.querySelector('#gardenInfo');
 
   try {
     // Load map data
@@ -76,7 +70,7 @@ export async function initGarden(container, state) {
     // ── End frog ────────────────────────────────────────────────────────────
 
     // Setup event listeners
-    setupGardenEvents(mapLayer, plantLayer, container, state);
+    setupGardenEvents(mapLayer, container, state);
 
     return {
       refresh:  (currentState) => refreshGarden(container, currentState),
@@ -96,7 +90,7 @@ export async function initGarden(container, state) {
 /**
  * Setup event listeners for garden interactions
  */
-function setupGardenEvents(mapLayer, plantLayer, container, state) {
+function setupGardenEvents(mapLayer, container, state) {
   const plantButton     = container.querySelector('#plantTestRoseBtn');
   const flowerStore     = container.querySelector('#flowerStore');
   const flowerOptionsDiv = flowerStore?.querySelector('.flower-options');
@@ -194,20 +188,19 @@ function setupGardenEvents(mapLayer, plantLayer, container, state) {
       }
 
       const currentState = await getState();
-      console.log("currstate =", state);
       const plant = createPlant(
         selectedFlowerType,
         tile.tileX,
         tile.tileY,
         currentState.totalFocusMinutes || 0,
-        60
+        { growDurationMinutes: flowerDef?.defaultGrowDurationMinutes }
       );
 
-      console.log("current focus:", state.totalFocusMinutes, "plant focus:", plant.plantedAtFocusMinutes);
+      gardenState.addPlant(plant);
+      gardenState.spendCoins(cost);
+      gardenState = await saveGarden(gardenState);
 
-      gardenState = await addPlant(plant);
-      gardenState = await updateCoins(-cost);
-      state.garden = gardenState;
+      state.garden = gardenState.serialize();
 
       updateGardenDisplay(container, gardenState, state);
 
@@ -231,26 +224,11 @@ function setupGardenEvents(mapLayer, plantLayer, container, state) {
 }
 
 /**
- * Create a new plant object
- */
-function createPlant(type, tileX, tileY, totalFocusMinutes, growDurationMins) {
-  return {
-    id: `plant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    type,
-    tileX,
-    tileY,
-    plantedAtFocusMinutes: totalFocusMinutes || 0,
-    growDurationMinutes:   growDurationMins,
-  };
-}
-
-/**
  * Update the garden display
  */
 function updateGardenDisplay(container, gardenState, appState) {
   const plantLayer       = container.querySelector('#plantLayer');
   const totalFocusMinutes = appState?.totalFocusMinutes || 0;
-  console.log("Focus = ", totalFocusMinutes);
   renderPlants(plantLayer, gardenState.plants || [], totalFocusMinutes);
   updateCoinDisplays(container, gardenState.coins || 0);
 }

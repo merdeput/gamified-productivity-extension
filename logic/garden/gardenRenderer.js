@@ -3,7 +3,8 @@
  * Handles rendering the Tiled map and plant sprites using HTML/CSS
  */
 
-import { getPlantStage, getPlantSprite, getSpriteBackgroundPosition } from './plantGrowth.js';
+import { getSpriteBackgroundPosition } from './plantGrowth.js';
+import { Plant } from './plant.js';
 
 /**
  * Map configuration - loaded from assets/gardenMap.tmj
@@ -12,7 +13,7 @@ let mapData = null;
 let tilesets = null;
 
 const mapUrl = chrome.runtime.getURL(
-    'assets/'
+    'assets/map/'
 );
 
 /**
@@ -188,7 +189,7 @@ function renderLayerTiles(container, layer, mapData, tileSize) {
       if (mapData.tilesets && mapData.tilesets.length > 0) {
         const tileset = getTilesetForGid(tileId, mapData.tilesets);
         const spriteUrl = tileset.image.replace(/^\.\.\//, '');
-        const imageUrl = chrome.runtime.getURL(`assets/${spriteUrl}`);
+        const imageUrl = chrome.runtime.getURL(`assets/map/${spriteUrl}`);
         
         // Calculate tile position in the tileset image
         const tileIndex = tileId - tileset.firstgid;
@@ -242,15 +243,15 @@ export function renderPlants(plantLayer, plants, totalFocusMinutes) {
     
     plants.forEach(plant => {
       try {
-        const stage = getPlantStage(plant, totalFocusMinutes);
-        const sprite = getPlantSprite(plant.type, stage);
+        const plantModel = plant instanceof Plant ? plant : new Plant(plant);
+        const sprite = plantModel.getSprite(totalFocusMinutes);
         const scale = 1;
         const scaledWidth = sprite.spriteWidth * scale;
         const scaledHeight = sprite.spriteHeight * scale;
 
         // Calculate plant position (centered on tile)
-        const tileCenterX = plant.tileX * tileSize + tileSize / 2;
-        const tileCenterY = plant.tileY * tileSize + tileSize / 2;
+        const tileCenterX = plantModel.tileX * tileSize + tileSize / 2;
+        const tileCenterY = plantModel.tileY * tileSize + tileSize / 2;
 
         const plantRenderX = tileCenterX - scaledWidth / 2;
         const plantRenderY = tileCenterY - scaledHeight / 2;
@@ -258,10 +259,10 @@ export function renderPlants(plantLayer, plants, totalFocusMinutes) {
         // Create plant element
         const plantEl = document.createElement('div');
         plantEl.className = 'plant-sprite';
-        plantEl.dataset.plantId = plant.id;
-        plantEl.dataset.tileX = plant.tileX;
-        plantEl.dataset.tileY = plant.tileY;
-        plantEl.title = `${plant.type} (${sprite.stageName})`;
+        plantEl.dataset.plantId = plantModel.id;
+        plantEl.dataset.tileX = plantModel.tileX;
+        plantEl.dataset.tileY = plantModel.tileY;
+        plantEl.title = `${plantModel.definition.displayName} (${sprite.stageName})`;
         
         // Position the plant
 

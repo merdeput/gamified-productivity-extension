@@ -30,6 +30,19 @@ export const DEFAULT_STATE = {
     plants: [],
     coins: 0
   },
+  gardens: {
+    default: {
+      id: "default",
+      name: "Garden",
+      layoutId: "default",
+      theme: "default",
+      unlocks: {},
+      upgrades: {},
+      plants: [],
+      coins: 0
+    }
+  },
+  activeGardenId: "default",
   totalFocusMinutes: 0,
   blockingAnalytics:  { ...DEFAULT_BLOCKING_ANALYTICS }
 };
