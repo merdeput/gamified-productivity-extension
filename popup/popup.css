@@ -904,6 +904,10 @@ body.dark-theme .coin-inline {
   color: #bde2c7;
 }
 
+body.dark-theme .garden-wallet {
+  color: #bde2c7;
+}
+
 body.dark-theme .coin-icon {
   background: #d9b64d;
   box-shadow: inset 0 0 0 2px rgba(255, 237, 158, 0.55);
@@ -924,9 +928,19 @@ body.dark-theme .session-alert {
 body.dark-theme .date-empty,
 body.dark-theme .task-item,
 body.dark-theme .garden-placeholder,
+body.dark-theme .garden-card,
 body.dark-theme .settings-analytics-panel {
   border-color: #3c4348;
   background: #1f2427;
+}
+
+body.dark-theme .garden-card span {
+  color: #b8c0c5;
+}
+
+body.dark-theme .garden-card.active {
+  border-color: #5d9b72;
+  background: #263b2d;
 }
 
 body.dark-theme .timer-box,
@@ -1088,6 +1102,56 @@ body.dark-theme .toast {
 }
 
 /* Garden Styles */
+.garden-wallet {
+  flex: 0 0 auto;
+  color: #28563b;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.garden-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: 0.45rem;
+  margin-bottom: clamp(0.55rem, 1.8vw, 0.75rem);
+}
+
+.garden-card {
+  display: grid;
+  justify-items: start;
+  gap: 0.18rem;
+  min-height: 3.2rem;
+  padding: 0.5rem 0.6rem;
+  text-align: left;
+  border-color: #d9d0c2;
+  background: #fbfaf7;
+}
+
+.garden-card strong,
+.garden-card span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.garden-card strong {
+  font-size: 12px;
+}
+
+.garden-card span {
+  color: #666;
+  font-size: 11px;
+}
+
+.garden-card.active {
+  border-color: #316f4a;
+  background: #ecf8e5;
+  box-shadow: 0 0 0 2px rgba(49, 111, 74, 0.14);
+}
+
+.garden-card.locked {
+  border-style: dashed;
+}
+
 .garden-container {
   position: relative;
   width: 100%;
@@ -1138,13 +1202,20 @@ body.dark-theme .toast {
   background-repeat: no-repeat;
 }
 
-.plantable-tile {
+.planting-tile {
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  z-index: 3;
+  background: transparent;
+  transition: background-color 0.16s ease, box-shadow 0.16s ease;
 }
 
-.plantable-tile:hover {
-  background-color: rgba(176, 220, 164, 0.3);
+.map-layer.planting-mode .planting-tile.is-compatible:hover {
+  background-color: rgba(87, 171, 110, 0.28);
+  box-shadow: inset 0 0 0 2px rgba(49, 111, 74, 0.55);
+}
+
+.map-layer.planting-mode .planting-tile.is-incompatible:hover {
+  background-color: rgba(181, 71, 71, 0.12);
 }
 
 .plant-sprite {
@@ -1233,6 +1304,7 @@ body.dark-theme .toast {
   height: 16px;
   background-repeat: no-repeat;
   background-position: center;
+  image-rendering: pixelated;
 }
 
 .flower-label {

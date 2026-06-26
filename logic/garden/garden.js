@@ -1,185 +1,121 @@
 /**
- * Garden main module
- * Orchestrates garden functionality: loading, rendering, and interaction
+ * Garden main module.
+ * Coordinates garden selection, map rendering, shop filtering, and planting.
  */
 
-import { FLOWER_DEFINITIONS } from './plantGrowth.js';
 import { getState } from '../storage.js';
-
 import {
-  loadGarden,
-  saveGarden,
-  removePlant,
+  createPlant,
   getPlantsAtTile,
-  createPlant
+  listGardens,
+  loadActiveGarden,
+  loadGarden,
+  purchaseGarden,
+  removePlant,
+  saveGarden,
+  setActiveGarden
 } from './gardenStorage.js';
 import {
+  getMapDimensions,
+  getTileFromEvent,
   loadMapData,
   renderMap,
-  renderPlants,
-  getTileFromEvent,
-  getMapDimensions
+  renderPlants
 } from './gardenRenderer.js';
+import { FlowerShop } from './flowerShop.js';
 import { GardenAnimals } from './gardenAnimals.js';
 
-// Module-level reference so we can destroy on teardown
 let _animalManager = null;
 
-/**
- * Initialize the garden view
- * @param {HTMLElement} container - Garden screen container
- * @param {Object} state - Application state with totalFocusMinutes
- * @returns {Promise<Object>} Garden controller object
- */
 export async function initGarden(container, state) {
   const gardenContainer = container.querySelector('#gardenContainer');
-  const mapLayer        = container.querySelector('#mapLayer');
-  const animalLayer     = container.querySelector('#animalLayer');
-  const loadingEl       = container.querySelector('#gardenLoading');
-  const actionsEl       = container.querySelector('#gardenActions');
+  const mapLayer = container.querySelector('#mapLayer');
+  const animalLayer = container.querySelector('#animalLayer');
+  const loadingEl = container.querySelector('#gardenLoading');
+  const actionsEl = container.querySelector('#gardenActions');
 
   try {
-    // Load map data
-    await loadMapData();
-
-    // Render the map
-    await renderMap(mapLayer);
-
-    // Hide loading, show garden
     loadingEl?.classList.add('hidden');
     gardenContainer?.classList.remove('hidden');
     actionsEl?.classList.remove('hidden');
 
-    // Load and render plants
-    const gardenState = await loadGarden();
-    updateGardenDisplay(container, gardenState, state);
-
-    // ── Spawn frog ──────────────────────────────────────────────────────────
-    // Destroy any previous manager (e.g. garden re-opened without full teardown)
-    if (_animalManager) {
-      _animalManager.destroy();
-      _animalManager = null;
-    }
-
-    const baseUrl  = chrome.runtime.getURL('assets/');
-    const mapDims  = getMapDimensions();
-    // animalLayer is a separate div above plantLayer so plant re-renders
-    // (which do plantLayer.innerHTML = '') never wipe the frog
-    _animalManager = new GardenAnimals(animalLayer, mapDims, baseUrl);
-    _animalManager.spawnFrog();
-    // ── End frog ────────────────────────────────────────────────────────────
-
-    // Setup event listeners
-    setupGardenEvents(mapLayer, container, state);
+    const controller = await setupGardenEvents(mapLayer, animalLayer, container, state);
 
     return {
-      refresh:  (currentState) => refreshGarden(container, currentState),
-      getState: () => loadGarden(),
-      destroy:  () => {
+      refresh: currentState => controller.refresh(currentState),
+      getState: () => loadActiveGarden(),
+      destroy: () => {
         _animalManager?.destroy();
         _animalManager = null;
-      },
+      }
     };
-
   } catch (error) {
     console.error('Failed to initialize garden:', error);
     loadingEl.textContent = 'Failed to load garden. Please check the console.';
   }
 }
 
-/**
- * Setup event listeners for garden interactions
- */
-function setupGardenEvents(mapLayer, container, state) {
-  const plantButton     = container.querySelector('#plantTestRoseBtn');
-  const flowerStore     = container.querySelector('#flowerStore');
-  const flowerOptionsDiv = flowerStore?.querySelector('.flower-options');
-  const gardenInfoEl    = container.querySelector('#gardenInfo');
+async function setupGardenEvents(mapLayer, animalLayer, container, state) {
+  const plantButton = container.querySelector('#plantTestRoseBtn');
+  const flowerStore = container.querySelector('#flowerStore');
+  const gardenListEl = container.querySelector('#gardenList');
+  const gardenInfoEl = container.querySelector('#gardenInfo');
 
-  let plantingMode      = false;
-  let selectedFlowerType = null;
-  let selectedFlowerName = null;
+  let activeGarden = await loadActiveGarden();
+  let plantingMode = false;
+  let selectedPlantDefinition = null;
 
-  // Generate store buttons from FLOWER_DEFINITIONS
-  if (flowerOptionsDiv) {
-    flowerOptionsDiv.innerHTML = '';
-    FLOWER_DEFINITIONS.forEach(flower => {
-      const btn = document.createElement('button');
-      btn.className = 'flower-option';
-      btn.dataset.flowerType = flower.type;
-      btn.type = 'button';
-      btn.title = flower.description;
-
-      const preview = document.createElement('div');
-      preview.className = 'flower-preview';
-      const spriteUrl = chrome.runtime.getURL(`assets/plants/${flower.filename}`);
-      preview.style.backgroundImage = `url('${spriteUrl}')`;
-      const matureFrame = flower.stages - 1;
-      preview.style.backgroundPosition = `-${matureFrame * 16}px 0px`;
-      preview.style.backgroundSize = `${flower.stages * 16}px 16px`;
-
-      const label = document.createElement('div');
-      label.className = 'flower-label';
-      label.textContent = `${flower.name} (${flower.price})`;
-
-      btn.appendChild(preview);
-      btn.appendChild(label);
-
-      btn.addEventListener('click', () => {
-        selectedFlowerType = flower.type;
-        selectedFlowerName = flower.name;
-        flowerOptionsDiv.querySelectorAll('.flower-option').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        gardenInfoEl.textContent = `Click a plantable tile to plant a ${flower.name}.`;
-      });
-
-      flowerOptionsDiv.appendChild(btn);
-    });
-  }
-
-  // Plant flower button — show store
-  plantButton?.addEventListener('click', () => {
-    if (!plantingMode) {
-      plantingMode = true;
-      selectedFlowerType = null;
-      selectedFlowerName = null;
-      plantButton.textContent = 'Cancel';
-      plantButton.classList.add('active');
-      flowerStore?.classList.remove('hidden');
-      gardenInfoEl.textContent = 'Select a flower to plant, then click a tile.';
-    } else {
-      plantingMode = false;
-      selectedFlowerType = null;
-      selectedFlowerName = null;
-      plantButton.textContent = 'Plant Flower';
-      plantButton.classList.remove('active');
-      flowerStore?.classList.add('hidden');
-      gardenInfoEl.textContent = '';
-      flowerOptionsDiv?.querySelectorAll('.flower-option').forEach(b => b.classList.remove('selected'));
+  const flowerShop = new FlowerShop(flowerStore, {
+    onSelect: definition => {
+      selectedPlantDefinition = definition;
+      updatePlantingHighlights(mapLayer, selectedPlantDefinition, plantingMode);
+      gardenInfoEl.textContent = `Click a highlighted tile to plant a ${definition.displayName}.`;
     }
   });
 
-  // Click handler for planting
-  mapLayer?.addEventListener('click', async (event) => {
-    if (!plantingMode || !selectedFlowerType) return;
+  await renderGardenList(gardenListEl, activeGarden, switchGarden);
+  await renderGardenScene(container, mapLayer, animalLayer, activeGarden, state, flowerShop);
 
-    const tile = getTileFromEvent(event, mapLayer);
+  plantButton?.addEventListener('click', () => {
+    if (!plantingMode) {
+      plantingMode = true;
+      selectedPlantDefinition = null;
+      plantButton.textContent = 'Cancel';
+      plantButton.classList.add('active');
+      flowerStore?.classList.remove('hidden');
+      flowerShop.clearSelection();
+      updatePlantingHighlights(mapLayer, null, plantingMode);
+      gardenInfoEl.textContent = 'Select a flower to plant, then click a tile.';
+      return;
+    }
+
+    closePlantingMode();
+  });
+
+  mapLayer?.addEventListener('click', async event => {
+    if (!plantingMode || !selectedPlantDefinition) return;
+
+    const tile = getTileFromEvent(event, mapLayer, selectedPlantDefinition.plantableLayers);
     if (!tile) {
-      gardenInfoEl.textContent = 'That tile is not plantable. Please choose another.';
+      gardenInfoEl.textContent = 'That plant cannot grow on this tile.';
       return;
     }
 
     try {
-      let gardenState = await loadGarden();
-
+      let gardenState = await loadGarden(activeGarden.id);
       const existingPlants = getPlantsAtTile(gardenState, tile.tileX, tile.tileY);
+
       if (existingPlants.length > 0) {
         gardenInfoEl.textContent = 'This tile already has a plant!';
         return;
       }
 
-      const flowerDef    = FLOWER_DEFINITIONS.find(f => f.type === selectedFlowerType);
-      const cost         = flowerDef?.price || 10;
+      if (!gardenState.canPlantDefinitionAt(selectedPlantDefinition, tile)) {
+        gardenInfoEl.textContent = 'That plant cannot grow on this tile.';
+        return;
+      }
+
+      const cost = selectedPlantDefinition.price || 10;
       const currentCoins = gardenState.coins || 0;
 
       if (currentCoins < cost) {
@@ -189,45 +125,154 @@ function setupGardenEvents(mapLayer, container, state) {
 
       const currentState = await getState();
       const plant = createPlant(
-        selectedFlowerType,
+        selectedPlantDefinition.id,
         tile.tileX,
         tile.tileY,
         currentState.totalFocusMinutes || 0,
-        { growDurationMinutes: flowerDef?.defaultGrowDurationMinutes }
+        {
+          growDurationMinutes: selectedPlantDefinition.defaultGrowDurationMinutes,
+          layer: tile.layerName
+        }
       );
 
       gardenState.addPlant(plant);
       gardenState.spendCoins(cost);
-      gardenState = await saveGarden(gardenState);
-
-      state.garden = gardenState.serialize();
+      gardenState = await saveGarden(gardenState, activeGarden.id);
+      activeGarden = gardenState;
+      syncLocalGardenState(state, gardenState);
 
       updateGardenDisplay(container, gardenState, state);
+      await renderGardenList(gardenListEl, activeGarden, switchGarden);
 
-      const plantedName = selectedFlowerName;
-      plantingMode       = false;
-      selectedFlowerType = null;
-      selectedFlowerName = null;
-
-      plantButton.textContent = 'Plant Flower';
-      plantButton.classList.remove('active');
-      flowerStore?.classList.add('hidden');
-      flowerOptionsDiv?.querySelectorAll('.flower-option').forEach(b => b.classList.remove('selected'));
-
+      const plantedName = selectedPlantDefinition.displayName;
+      closePlantingMode();
       gardenInfoEl.textContent = `Planted a ${plantedName} at (${tile.tileX}, ${tile.tileY})! (-${cost} coins)`;
-
     } catch (error) {
       console.error('Failed to plant:', error);
       gardenInfoEl.textContent = 'Failed to plant. Please try again.';
     }
   });
+
+  async function switchGarden(gardenId, action = 'select') {
+    try {
+      closePlantingMode();
+      activeGarden = action === 'purchase'
+        ? await purchaseGarden(gardenId)
+        : await setActiveGarden(gardenId);
+
+      syncLocalGardenState(state, activeGarden);
+      await renderGardenScene(container, mapLayer, animalLayer, activeGarden, state, flowerShop);
+      await renderGardenList(gardenListEl, activeGarden, switchGarden);
+      gardenInfoEl.textContent = `${activeGarden.name} selected.`;
+    } catch (error) {
+      console.error('Failed to switch garden:', error);
+      gardenInfoEl.textContent = error.message || 'Could not switch garden.';
+    }
+  }
+
+  function closePlantingMode() {
+    plantingMode = false;
+    selectedPlantDefinition = null;
+    plantButton.textContent = 'Plant Flower';
+    plantButton.classList.remove('active');
+    flowerStore?.classList.add('hidden');
+    flowerShop.clearSelection();
+    updatePlantingHighlights(mapLayer, null, false);
+  }
+
+  return {
+    refresh: async currentState => {
+      activeGarden = await loadGarden(activeGarden.id);
+      await renderGardenList(gardenListEl, activeGarden, switchGarden);
+      updateGardenDisplay(container, activeGarden, currentState);
+    }
+  };
 }
 
-/**
- * Update the garden display
- */
+async function renderGardenScene(container, mapLayer, animalLayer, gardenState, appState, flowerShop) {
+  await loadMapData(gardenState);
+  await renderMap(mapLayer, gardenState);
+  updateGardenDisplay(container, gardenState, appState);
+  flowerShop.renderForGarden(gardenState);
+  restartAnimals(animalLayer);
+}
+
+function restartAnimals(animalLayer) {
+  _animalManager?.destroy();
+
+  const baseUrl = chrome.runtime.getURL('assets/');
+  const mapDims = getMapDimensions();
+  _animalManager = new GardenAnimals(animalLayer, mapDims, baseUrl);
+  _animalManager.spawnFrog();
+}
+
+async function renderGardenList(container, activeGarden, onGardenAction) {
+  if (!container) return;
+
+  const gardens = await listGardens();
+  container.innerHTML = '';
+
+  gardens.forEach(garden => {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'garden-card';
+    card.classList.toggle('active', garden.id === activeGarden.id);
+    card.classList.toggle('locked', !garden.unlocked);
+
+    const title = document.createElement('strong');
+    title.textContent = garden.name;
+
+    const meta = document.createElement('span');
+    meta.textContent = garden.unlocked
+      ? `${garden.plantCount} planted`
+      : `Locked - ${garden.price} coins`;
+
+    card.appendChild(title);
+    card.appendChild(meta);
+
+    card.addEventListener('click', () => {
+      onGardenAction(garden.id, garden.unlocked ? 'select' : 'purchase');
+    });
+
+    container.appendChild(card);
+  });
+}
+
+function updatePlantingHighlights(mapLayer, plantDefinition, isPlanting) {
+  mapLayer.classList.toggle('planting-mode', Boolean(isPlanting && plantDefinition));
+
+  mapLayer.querySelectorAll('.planting-tile').forEach(tile => {
+    const tileLayers = String(tile.dataset.plantLayers || '').split(',').filter(Boolean);
+    const isCompatible = Boolean(
+      plantDefinition &&
+      plantDefinition.plantableLayers.some(layerName => tileLayers.includes(layerName))
+    );
+
+    tile.classList.toggle('is-compatible', isCompatible);
+    tile.classList.toggle('is-incompatible', Boolean(isPlanting && plantDefinition && !isCompatible));
+  });
+}
+
+function syncLocalGardenState(appState, gardenState) {
+  const serialized = gardenState.serialize();
+  appState.gardens = {
+    ...(appState.gardens || {}),
+    [gardenState.id]: serialized
+  };
+  appState.activeGardenId = gardenState.id;
+
+  if (gardenState.id === 'growing') {
+    appState.garden = serialized;
+  } else {
+    appState.garden = {
+      ...(appState.garden || {}),
+      coins: serialized.coins
+    };
+  }
+}
+
 function updateGardenDisplay(container, gardenState, appState) {
-  const plantLayer       = container.querySelector('#plantLayer');
+  const plantLayer = container.querySelector('#plantLayer');
   const totalFocusMinutes = appState?.totalFocusMinutes || 0;
   renderPlants(plantLayer, gardenState.plants || [], totalFocusMinutes);
   updateCoinDisplays(container, gardenState.coins || 0);
@@ -240,22 +285,15 @@ function updateCoinDisplays(container, coins) {
   if (gardenCoinsEl) gardenCoinsEl.textContent = `${coins} coin${coins === 1 ? '' : 's'}`;
 }
 
-/**
- * Refresh the garden view
- */
 export async function refreshGarden(container, state) {
   try {
-    const gardenState = await loadGarden();
-    gardenState.coins = state.garden?.coins || 0;
+    const gardenState = await loadActiveGarden();
     updateGardenDisplay(container, gardenState, state);
   } catch (error) {
     console.error('Failed to refresh garden:', error);
   }
 }
 
-/**
- * Remove a plant from the garden
- */
 export async function removeGardenPlant(plantId) {
   try {
     return await removePlant(plantId);
@@ -268,5 +306,5 @@ export async function removeGardenPlant(plantId) {
 export default {
   initGarden,
   refreshGarden,
-  removeGardenPlant,
+  removeGardenPlant
 };

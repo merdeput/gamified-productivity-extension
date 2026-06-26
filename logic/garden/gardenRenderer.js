@@ -7,10 +7,11 @@ import { getSpriteBackgroundPosition } from './plantGrowth.js';
 import { Plant } from './plant.js';
 
 /**
- * Map configuration - loaded from assets/gardenMap.tmj
+ * Map configuration - loaded from assets/map/*.tmj
  */
 let mapData = null;
-let tilesets = null;
+let activeGarden = null;
+const mapCache = new Map();
 
 const mapUrl = chrome.runtime.getURL(
     'assets/map/'
@@ -20,18 +21,22 @@ const mapUrl = chrome.runtime.getURL(
  * Load and parse the Tiled map
  * @returns {Promise<Object>} Map data
  */
-export async function loadMapData() {
-  if (mapData) {
+export async function loadMapData(garden = activeGarden) {
+  const mapFile = garden?.mapFile || 'growingMap.tmj';
+  if (mapCache.has(mapFile)) {
+    mapData = mapCache.get(mapFile);
+    activeGarden = garden;
     return mapData;
   }
 
   try {
-    const response = await fetch(mapUrl + 'gardenMap.tmj');
+    const response = await fetch(mapUrl + mapFile);
     if (!response.ok) {
       throw new Error(`Failed to load map: ${response.status}`);
     }
     
     mapData = await response.json();
+    activeGarden = garden;
     
     // Validate map structure
     if (!mapData.layers || !Array.isArray(mapData.layers)) {
@@ -42,6 +47,7 @@ export async function loadMapData() {
       throw new Error('Invalid map data: missing dimensions');
     }
     
+    mapCache.set(mapFile, mapData);
     return mapData;
   } catch (error) {
     console.error('Error loading map:', error);
@@ -58,27 +64,35 @@ export function getPlantableLayer() {
   return mapData.layers.find(layer => layer.name === 'Plantable') || null;
 }
 
+export function getPlantableLayers(layerNames = activeGarden?.plantLayers || ['Plantable']) {
+  if (!mapData) return [];
+  return mapData.layers.filter(layer =>
+    layerNames.includes(layer.name) &&
+    layer.type === 'tilelayer'
+  );
+}
+
 /**
  * Check if a tile is plantable
  * @param {number} tileX - Tile X coordinate
  * @param {number} tileY - Tile Y coordinate
  * @returns {boolean} Whether the tile can accept plants
  */
-export function isPlantableTile(tileX, tileY) {
-  const plantableLayer = getPlantableLayer();
-  if (!plantableLayer) {
-    return false;
-  }
+export function getPlantableTile(tileX, tileY, layerNames = activeGarden?.plantLayers || ['Plantable']) {
+  if (!mapData) return null;
 
   if (tileX < 0 || tileY < 0 || tileX >= mapData.width || tileY >= mapData.height) {
-    return false;
+    return null;
   }
 
   const index = tileY * mapData.width + tileX;
-  const tileId = plantableLayer.data[index];
-  
-  // Tile ID 0 means no tile/not plantable
-  return tileId !== 0;
+  const layer = getPlantableLayers(layerNames).find(candidate => candidate.data[index] !== 0);
+
+  return layer ? { tileX, tileY, layerName: layer.name } : null;
+}
+
+export function isPlantableTile(tileX, tileY, layerNames = activeGarden?.plantLayers || ['Plantable']) {
+  return Boolean(getPlantableTile(tileX, tileY, layerNames));
 }
 
 /**
@@ -86,9 +100,9 @@ export function isPlantableTile(tileX, tileY) {
  * @param {HTMLElement} container - Container element
  * @returns {Promise<void>}
  */
-export async function renderMap(container) {
+export async function renderMap(container, garden = activeGarden) {
   try {
-    const mapData = await loadMapData();
+    const mapData = await loadMapData(garden);
     
     // Clear existing content
     container.innerHTML = '';
@@ -130,7 +144,8 @@ export async function renderMap(container) {
     // Create tiles for the first visible layer (usually the base layer)
     const renderLayers = mapData.layers.filter(layer =>
         layer.type === 'tilelayer' &&
-        layer.visible !== false
+        layer.visible !== false &&
+        !(garden?.plantLayers || []).includes(layer.name)
     );
         
     renderLayers.forEach((layer, layerIndex) => {
@@ -142,10 +157,36 @@ export async function renderMap(container) {
             layerIndex
         );
     });
+
+    renderPlantingTiles(container, mapData, tileSize, garden?.plantLayers || ['Plantable']);
     
   } catch (error) {
     console.error('Error rendering map:', error);
     throw error;
+  }
+}
+
+function renderPlantingTiles(container, mapData, tileSize, layerNames) {
+  const width = mapData.width;
+  const height = mapData.height;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const plantableLayers = getPlantableLayers(layerNames)
+        .filter(layer => layer.data[y * width + x] !== 0)
+        .map(layer => layer.name);
+
+      if (plantableLayers.length === 0) continue;
+
+      const tile = document.createElement('div');
+      tile.className = 'map-tile planting-tile';
+      tile.style.left = `${x * tileSize}px`;
+      tile.style.top = `${y * tileSize}px`;
+      tile.dataset.tileX = x;
+      tile.dataset.tileY = y;
+      tile.dataset.plantLayers = plantableLayers.join(',');
+      container.appendChild(tile);
+    }
   }
 }
 
@@ -210,13 +251,6 @@ function renderLayerTiles(container, layer, mapData, tileSize) {
 
         tile.style.backgroundRepeat = 'no-repeat';
         tile.style.backgroundImage = `url('${imageUrl}')`;
-      }
-      
-      // Add class to plantable tiles so they can be clicked
-      if (isPlantableTile(x, y)) {
-        tile.className += ' plantable-tile';
-        tile.dataset.tileX = x;
-        tile.dataset.tileY = y;
       }
       
       container.appendChild(tile);
@@ -296,7 +330,7 @@ export function renderPlants(plantLayer, plants, totalFocusMinutes) {
  * @param {HTMLElement} mapContainer - Map container element
  * @returns {Object|null} {tileX, tileY} or null if not on a valid tile
  */
-export function getTileFromEvent(event, mapContainer) {
+export function getTileFromEvent(event, mapContainer, layerNames = activeGarden?.plantLayers || ['Plantable']) {
   try {
     const rect = mapContainer.getBoundingClientRect();
     const x = event.clientX - rect.left;
@@ -306,11 +340,7 @@ export function getTileFromEvent(event, mapContainer) {
     const tileX = Math.floor(x / tileSize);
     const tileY = Math.floor(y / tileSize);
     
-    if (isPlantableTile(tileX, tileY)) {
-      return { tileX, tileY };
-    }
-    
-    return null;
+    return getPlantableTile(tileX, tileY, layerNames);
   } catch (error) {
     console.error('Error getting tile from event:', error);
     return null;
@@ -337,6 +367,8 @@ export function getMapDimensions() {
 export default {
   loadMapData,
   getPlantableLayer,
+  getPlantableLayers,
+  getPlantableTile,
   isPlantableTile,
   renderMap,
   renderPlants,

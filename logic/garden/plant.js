@@ -10,6 +10,7 @@ export class Plant {
     this.type = data.type;
     this.tileX = Number(data.tileX);
     this.tileY = Number(data.tileY);
+    this.layer = data.layer || data.plantLayer || null;
     this.plantedAtFocusMinutes = Number(data.plantedAtFocusMinutes || 0);
 
     const definition = this.registry.get(this.type);
@@ -28,6 +29,7 @@ export class Plant {
       type,
       tileX,
       tileY,
+      layer: options.layer || null,
       plantedAtFocusMinutes: totalFocusMinutes,
       growDurationMinutes: options.growDurationMinutes || definition.defaultGrowDurationMinutes,
       state: options.state,
@@ -78,6 +80,7 @@ export class Plant {
       type: this.type,
       tileX: this.tileX,
       tileY: this.tileY,
+      layer: this.layer,
       plantedAtFocusMinutes: this.plantedAtFocusMinutes,
       growDurationMinutes: this.growDurationMinutes,
       state: this.state,

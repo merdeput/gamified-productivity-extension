@@ -102,7 +102,9 @@ export function normalizeState(stored = {}) {
  
   const garden = normalizeGardenState(stored.garden || DEFAULT_STATE.garden, DEFAULT_STATE.garden);
   const gardens = normalizeGardensState(stored.gardens, garden);
-  const activeGardenId = typeof stored.activeGardenId === "string" && stored.activeGardenId
+  const activeGardenId = typeof stored.activeGardenId === "string" &&
+    stored.activeGardenId &&
+    DEFAULT_STATE.gardens[stored.activeGardenId]
     ? stored.activeGardenId
     : DEFAULT_STATE.activeGardenId;
 
@@ -135,27 +137,28 @@ function normalizeGardensState(value, legacyGarden) {
   const entries = Object.entries(source);
   const gardens = entries.reduce((result, [gardenId, garden]) => {
     result[gardenId] = normalizeGardenState(garden, {
-      ...DEFAULT_STATE.gardens.default,
+      ...getDefaultGardenState(gardenId),
       id: gardenId
     });
     return result;
   }, {});
 
   return {
+    ...DEFAULT_STATE.gardens,
     ...gardens,
-    default: normalizeGardenState({
-      ...(gardens.default || {}),
+    growing: normalizeGardenState({
+      ...(gardens.growing || {}),
       plants: legacyGarden.plants,
       coins: legacyGarden.coins
     }, {
-      ...DEFAULT_STATE.gardens.default,
+      ...getDefaultGardenState("growing"),
       plants: legacyGarden.plants,
       coins: legacyGarden.coins
     })
   };
 }
 
-function normalizeGardenState(value = {}, defaults = DEFAULT_STATE.gardens.default) {
+function normalizeGardenState(value = {}, defaults = getDefaultGardenState()) {
   return {
     ...defaults,
     ...(value || {}),
@@ -170,6 +173,10 @@ function normalizeGardenState(value = {}, defaults = DEFAULT_STATE.gardens.defau
       ...(value?.upgrades || {})
     }
   };
+}
+
+function getDefaultGardenState(gardenId = DEFAULT_STATE.activeGardenId) {
+  return DEFAULT_STATE.gardens[gardenId] || DEFAULT_STATE.gardens[DEFAULT_STATE.activeGardenId];
 }
  
 export function normalizeTask(task) {

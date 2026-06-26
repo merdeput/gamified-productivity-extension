@@ -31,18 +31,34 @@ export const DEFAULT_STATE = {
     coins: 0
   },
   gardens: {
-    default: {
-      id: "default",
-      name: "Garden",
-      layoutId: "default",
-      theme: "default",
+    growing: {
+      id: "growing",
+      name: "Growing Garden",
+      layoutId: "growing",
+      mapFile: "growingMap.tmj",
+      plantLayers: ["Plantable"],
+      theme: "growing",
+      unlocked: true,
+      unlocks: {},
+      upgrades: {},
+      plants: [],
+      coins: 0
+    },
+    water: {
+      id: "water",
+      name: "Water Garden",
+      layoutId: "water",
+      mapFile: "watermap.tmj",
+      plantLayers: ["Plantable", "Aquatic"],
+      theme: "water",
+      unlocked: false,
       unlocks: {},
       upgrades: {},
       plants: [],
       coins: 0
     }
   },
-  activeGardenId: "default",
+  activeGardenId: "growing",
   totalFocusMinutes: 0,
   blockingAnalytics:  { ...DEFAULT_BLOCKING_ANALYTICS }
 };

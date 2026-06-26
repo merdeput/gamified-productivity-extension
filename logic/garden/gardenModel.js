@@ -1,13 +1,18 @@
 import { Plant } from './plant.js';
+import { DEFAULT_GARDEN_ID, gardenDefinitionRegistry } from './gardenDefinitions.js';
 
-export const DEFAULT_GARDEN_ID = 'default';
+export { DEFAULT_GARDEN_ID };
 
 export class Garden {
   constructor(data = {}) {
     this.id = data.id || DEFAULT_GARDEN_ID;
-    this.name = data.name || 'Garden';
-    this.layoutId = data.layoutId || 'default';
-    this.theme = data.theme || 'default';
+    this.definition = gardenDefinitionRegistry.get(this.id);
+    this.name = data.name || this.definition?.name || 'Garden';
+    this.layoutId = data.layoutId || this.id;
+    this.mapFile = data.mapFile || this.definition?.mapFile || 'growingMap.tmj';
+    this.plantLayers = data.plantLayers || this.definition?.plantLayers || ['Plantable'];
+    this.theme = data.theme || this.definition?.theme || 'default';
+    this.unlocked = data.unlocked ?? this.definition?.defaultUnlocked ?? true;
     this.unlocks = data.unlocks || {};
     this.upgrades = data.upgrades || {};
     this.coins = Math.max(0, Number(data.coins || 0));
@@ -27,6 +32,14 @@ export class Garden {
 
   canPlantAt(tileX, tileY) {
     return !this.hasPlantAt(tileX, tileY);
+  }
+
+  canPlantDefinitionAt(definition, tile) {
+    if (!definition || !tile || !this.canPlantAt(tile.tileX, tile.tileY)) {
+      return false;
+    }
+
+    return definition.plantableLayers.includes(tile.layerName);
   }
 
   hasPlantAt(tileX, tileY) {
@@ -93,7 +106,10 @@ export class Garden {
       id: this.id,
       name: this.name,
       layoutId: this.layoutId,
+      mapFile: this.mapFile,
+      plantLayers: this.plantLayers,
       theme: this.theme,
+      unlocked: this.unlocked,
       unlocks: this.unlocks,
       upgrades: this.upgrades,
       plants: this.plants.map(plant => plant.serialize()),

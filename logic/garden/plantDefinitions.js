@@ -19,9 +19,11 @@ export class PlantDefinition {
     this.unlock = config.unlock || null;
     this.sprite = {
       filename: config.sprite.filename,
+      folder: config.sprite.folder || 'growing',
       frameWidth: config.sprite.frameWidth || DEFAULT_FRAME_SIZE,
       frameHeight: config.sprite.frameHeight || DEFAULT_FRAME_SIZE
     };
+    this.plantableLayers = config.plantableLayers || ['Plantable'];
     this.stages = config.stages.map((stage, index) => ({
       id: stage.id || `stage_${index}`,
       name: stage.name || `Stage ${index}`,
@@ -53,6 +55,8 @@ export class PlantDefinition {
       price: this.price,
       description: this.description,
       filename: this.sprite.filename,
+      folder: this.sprite.folder,
+      plantableLayers: [...this.plantableLayers],
       stages: this.stageCount,
       defaultGrowDurationMinutes: this.defaultGrowDurationMinutes,
       rarity: this.rarity,
@@ -100,6 +104,14 @@ export class PlantDefinitionRegistry {
   shopItems() {
     return this.list().map(definition => definition.getShopItem());
   }
+
+  shopItemsForLayers(layerNames = []) {
+    return this.list()
+      .filter(definition =>
+        definition.plantableLayers.some(layerName => layerNames.includes(layerName))
+      )
+      .map(definition => definition.getShopItem());
+  }
 }
 
 export const PLANT_DEFINITION_CONFIGS = [
@@ -108,7 +120,8 @@ export const PLANT_DEFINITION_CONFIGS = [
     displayName: 'Rose',
     price: 50,
     description: 'A classic beauty',
-    sprite: { filename: 'Rose-Red-grow.png' },
+    sprite: { filename: 'Rose-Red-grow.png', folder: 'growing' },
+    plantableLayers: ['Plantable'],
     stages: [
       { id: 'seed', name: 'Seed' },
       { id: 'sprout', name: 'Sprout' },
@@ -121,7 +134,8 @@ export const PLANT_DEFINITION_CONFIGS = [
     displayName: 'Dandelion',
     price: 40,
     description: 'Cheerful yellow flower',
-    sprite: { filename: 'Dandelion-Grow.png' },
+    sprite: { filename: 'Dandelion-Grow.png', folder: 'growing' },
+    plantableLayers: ['Plantable'],
     stages: [
       { id: 'seed', name: 'Seed' },
       { id: 'sprout', name: 'Sprout' },
@@ -135,7 +149,8 @@ export const PLANT_DEFINITION_CONFIGS = [
     displayName: 'Sunflower',
     price: 40,
     description: 'Bright and bold',
-    sprite: { filename: 'Sunflower-grow.png' },
+    sprite: { filename: 'Sunflower-grow.png', folder: 'growing' },
+    plantableLayers: ['Plantable'],
     stages: [
       { id: 'seed', name: 'Seed' },
       { id: 'sprout', name: 'Sprout' },
@@ -148,7 +163,8 @@ export const PLANT_DEFINITION_CONFIGS = [
     displayName: 'Tulip',
     price: 45,
     description: 'Elegant and graceful',
-    sprite: { filename: 'Tulip-White-grow.png' },
+    sprite: { filename: 'Tulip-White-grow.png', folder: 'growing' },
+    plantableLayers: ['Plantable'],
     stages: [
       { id: 'seed', name: 'Seed' },
       { id: 'sprout', name: 'Sprout' },
@@ -156,6 +172,69 @@ export const PLANT_DEFINITION_CONFIGS = [
       { id: 'mature', name: 'Mature Plant' },
       { id: 'blooming', name: 'Blooming', isMature: true }
     ]
+  },
+  {
+    id: 'big_duckweed',
+    displayName: 'Big Duckweed',
+    price: 35,
+    description: 'A broad floating water plant',
+    sprite: { filename: 'Big-Duckweed.png', folder: 'water', frameWidth: 32, frameHeight: 32 },
+    plantableLayers: ['Aquatic'],
+    stages: [{ id: 'mature', name: 'Floating', isMature: true }]
+  },
+  {
+    id: 'small_duckweed',
+    displayName: 'Small Duckweed',
+    price: 25,
+    description: 'Tiny greenery for quiet water',
+    sprite: { filename: 'Small-Duckweed.png', folder: 'water', frameWidth: 32, frameHeight: 32 },
+    plantableLayers: ['Aquatic'],
+    stages: [{ id: 'mature', name: 'Floating', isMature: true }]
+  },
+  {
+    id: 'lily_pad',
+    displayName: 'Lily Pad',
+    price: 30,
+    description: 'A calm leaf on the pond',
+    sprite: { filename: 'Lily-Pad.png', folder: 'water', frameWidth: 32, frameHeight: 32 },
+    plantableLayers: ['Aquatic'],
+    stages: [{ id: 'mature', name: 'Floating', isMature: true }]
+  },
+  {
+    id: 'flower_lily',
+    displayName: 'Flower Lily',
+    price: 55,
+    description: 'A bright bloom for aquatic tiles',
+    sprite: { filename: 'Flower-Lily.png', folder: 'water', frameWidth: 32, frameHeight: 32 },
+    plantableLayers: ['Aquatic'],
+    stages: [{ id: 'mature', name: 'Blooming', isMature: true }]
+  },
+  {
+    id: 'hyacinth',
+    displayName: 'Hyacinth',
+    price: 50,
+    description: 'A soft water flower cluster',
+    sprite: { filename: 'Hyacinth.png', folder: 'water', frameWidth: 32, frameHeight: 32 },
+    plantableLayers: ['Aquatic'],
+    stages: [{ id: 'mature', name: 'Blooming', isMature: true }]
+  },
+  {
+    id: 'single_cattail',
+    displayName: 'Single Cattail',
+    price: 45,
+    description: 'A slender reed for pond edges',
+    sprite: { filename: 'Single-Cattail.png', folder: 'water', frameWidth: 32, frameHeight: 32 },
+    plantableLayers: ['Aquatic'],
+    stages: [{ id: 'mature', name: 'Mature', isMature: true }]
+  },
+  {
+    id: 'double_cattail',
+    displayName: 'Double Cattail',
+    price: 60,
+    description: 'A fuller reed pair for water gardens',
+    sprite: { filename: 'Double-Cattail.png', folder: 'water', frameWidth: 32, frameHeight: 32 },
+    plantableLayers: ['Aquatic'],
+    stages: [{ id: 'mature', name: 'Mature', isMature: true }]
   }
 ];
 

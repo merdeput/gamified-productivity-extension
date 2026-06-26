@@ -87,11 +87,12 @@ export class GrowthResolver {
   getSprite(plantType, stageIndex = 0) {
     const definition = this.getDefinition(plantType);
     const stage = definition.getStage(stageIndex);
-    const spritePath = `assets/plants/${definition.sprite.filename}`;
+    const spritePath = `assets/plants/${definition.sprite.folder}/${definition.sprite.filename}`;
 
     return {
       url: this.urlResolver(spritePath),
       filename: definition.sprite.filename,
+      folder: definition.sprite.folder,
       stage: definition.stages.indexOf(stage),
       stageId: stage.id,
       stageCount: definition.stageCount,

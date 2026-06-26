@@ -13,6 +13,22 @@ export async function loadGarden(gardenId) {
   return gardenRepository.loadGarden(gardenId);
 }
 
+export async function loadActiveGarden() {
+  return gardenRepository.loadActiveGarden();
+}
+
+export async function listGardens() {
+  return gardenRepository.listGardens();
+}
+
+export async function setActiveGarden(gardenId) {
+  return gardenRepository.setActiveGarden(gardenId);
+}
+
+export async function purchaseGarden(gardenId) {
+  return gardenRepository.purchaseGarden(gardenId);
+}
+
 export async function saveGarden(gardenState, gardenId) {
   const garden = gardenState instanceof Garden ? gardenState : new Garden(gardenState);
   return gardenRepository.saveGarden(garden, gardenId || garden.id);
@@ -62,6 +78,10 @@ export function createPlant(type, tileX, tileY, totalFocusMinutes = 0, options =
 
 export default {
   loadGarden,
+  loadActiveGarden,
+  listGardens,
+  setActiveGarden,
+  purchaseGarden,
   saveGarden,
   addPlant,
   removePlant,

@@ -1,5 +1,6 @@
 import { getState, saveState } from '../storage.js';
 import { DEFAULT_GARDEN_ID, Garden } from './gardenModel.js';
+import { gardenDefinitionRegistry } from './gardenDefinitions.js';
 
 export class GardenRepository {
   constructor(options = {}) {
@@ -13,14 +14,94 @@ export class GardenRepository {
     return this.loadGardenFromState(state, gardenId);
   }
 
+  async loadActiveGarden() {
+    const state = await this.getState();
+    return this.loadGardenFromState(state, state.activeGardenId || this.defaultGardenId);
+  }
+
+  async listGardens() {
+    const state = await this.getState();
+    return gardenDefinitionRegistry.list().map(definition => {
+      const garden = this.loadGardenFromState(state, definition.id);
+      return {
+        ...definition,
+        unlocked: garden.unlocked,
+        plantCount: garden.plants.length
+      };
+    });
+  }
+
+  async setActiveGarden(gardenId) {
+    gardenDefinitionRegistry.require(gardenId);
+    const state = await this.getState();
+    const garden = this.loadGardenFromState(state, gardenId);
+
+    if (!garden.unlocked) {
+      throw new Error(`${garden.name} is locked`);
+    }
+
+    const nextState = {
+      ...state,
+      activeGardenId: gardenId
+    };
+
+    await this.saveState(nextState);
+    return garden;
+  }
+
+  async purchaseGarden(gardenId) {
+    const definition = gardenDefinitionRegistry.require(gardenId);
+    const state = await this.getState();
+    const walletGarden = this.loadGardenFromState(state, this.defaultGardenId);
+    const garden = this.loadGardenFromState(state, gardenId);
+
+    if (garden.unlocked) {
+      return garden;
+    }
+
+    if (walletGarden.coins < definition.price) {
+      throw new Error(`Not enough coins! Need ${definition.price}, have ${walletGarden.coins}.`);
+    }
+
+    walletGarden.spendCoins(definition.price);
+    garden.unlocked = true;
+    garden.coins = walletGarden.coins;
+
+    const gardens = {
+      ...(state.gardens || {}),
+      [this.defaultGardenId]: walletGarden.serialize(),
+      [gardenId]: garden.serialize()
+    };
+
+    const nextState = {
+      ...state,
+      gardens,
+      garden: this.toLegacyGarden(walletGarden.serialize()),
+      activeGardenId: gardenId
+    };
+
+    await this.saveState(nextState);
+    return garden;
+  }
+
   loadGardenFromState(state, gardenId = this.defaultGardenId) {
     const gardens = state.gardens || null;
+    const definition = gardenDefinitionRegistry.require(gardenId);
     const gardenData = gardens?.[gardenId] || (gardenId === this.defaultGardenId ? state.garden : null);
+    const normalizedGardenData = gardenId === this.defaultGardenId
+      ? gardenData
+      : { ...(gardenData || {}), coins: state.garden?.coins || 0 };
 
-    return Garden.fromState(gardenData || {}, {
+    return Garden.fromState(normalizedGardenData || {}, {
       id: gardenId,
+      name: definition.name,
+      layoutId: definition.id,
+      mapFile: definition.mapFile,
+      plantLayers: definition.plantLayers,
+      theme: definition.theme,
+      unlocked: definition.defaultUnlocked,
       plants: gardenId === this.defaultGardenId ? state.garden?.plants || [] : [],
-      coins: gardenId === this.defaultGardenId ? state.garden?.coins || 0 : 0
+      coins: state.garden?.coins || 0
     });
   }
 
@@ -38,12 +119,22 @@ export class GardenRepository {
     const nextState = {
       ...state,
       gardens,
-      activeGardenId: state.activeGardenId || gardenId
+      activeGardenId: gardenId
+    };
+
+    nextState.garden = {
+      ...this.toLegacyGarden(state.garden || {}),
+      coins: Math.max(0, Number(serializedGarden.coins || 0))
     };
 
     if (gardenId === this.defaultGardenId) {
-      nextState.garden = this.toLegacyGarden(serializedGarden);
+      nextState.garden.plants = serializedGarden.plants;
     }
+
+    nextState.gardens[this.defaultGardenId] = {
+      ...(nextState.gardens[this.defaultGardenId] || {}),
+      coins: nextState.garden.coins
+    };
 
     await this.saveState(nextState);
     return this.loadGardenFromState(nextState, gardenId);
