@@ -10,6 +10,7 @@ import {
   listGardens,
   loadActiveGarden,
   loadGarden,
+  purchaseAnimal,
   purchaseGarden,
   removePlant,
   saveGarden,
@@ -17,6 +18,7 @@ import {
 } from './gardenStorage.js';
 import {
   getMapDimensions,
+  getMoveableTiles,
   getTileFromEvent,
   loadMapData,
   renderMap,
@@ -70,6 +72,19 @@ async function setupGardenEvents(mapLayer, animalLayer, container, state) {
       selectedPlantDefinition = definition;
       updatePlantingHighlights(mapLayer, selectedPlantDefinition, plantingMode);
       gardenInfoEl.textContent = `Click a highlighted tile to plant a ${definition.displayName}.`;
+    },
+    onPurchaseAnimal: async definition => {
+      try {
+        let gardenState = await purchaseAnimal(definition.id, activeGarden.id);
+        activeGarden = gardenState;
+        syncLocalGardenState(state, gardenState);
+        await renderGardenScene(container, mapLayer, animalLayer, activeGarden, state, flowerShop);
+        await renderGardenList(gardenListEl, activeGarden, switchGarden);
+        gardenInfoEl.textContent = `${definition.displayName} joined your garden! (-${definition.price} coins)`;
+      } catch (error) {
+        console.error('Failed to purchase animal:', error);
+        gardenInfoEl.textContent = error.message || 'Could not purchase that animal.';
+      }
     }
   });
 
@@ -85,7 +100,7 @@ async function setupGardenEvents(mapLayer, animalLayer, container, state) {
       flowerStore?.classList.remove('hidden');
       flowerShop.clearSelection();
       updatePlantingHighlights(mapLayer, null, plantingMode);
-      gardenInfoEl.textContent = 'Select a flower to plant, then click a tile.';
+      gardenInfoEl.textContent = 'Select a flower to plant, or buy an animal for this garden.';
       return;
     }
 
@@ -142,6 +157,7 @@ async function setupGardenEvents(mapLayer, animalLayer, container, state) {
       syncLocalGardenState(state, gardenState);
 
       updateGardenDisplay(container, gardenState, state);
+      restartAnimals(animalLayer, gardenState);
       await renderGardenList(gardenListEl, activeGarden, switchGarden);
 
       const plantedName = selectedPlantDefinition.displayName;
@@ -173,7 +189,7 @@ async function setupGardenEvents(mapLayer, animalLayer, container, state) {
   function closePlantingMode() {
     plantingMode = false;
     selectedPlantDefinition = null;
-    plantButton.textContent = 'Plant Flower';
+    plantButton.textContent = 'Garden Shop';
     plantButton.classList.remove('active');
     flowerStore?.classList.add('hidden');
     flowerShop.clearSelection();
@@ -194,16 +210,19 @@ async function renderGardenScene(container, mapLayer, animalLayer, gardenState, 
   await renderMap(mapLayer, gardenState);
   updateGardenDisplay(container, gardenState, appState);
   flowerShop.renderForGarden(gardenState);
-  restartAnimals(animalLayer);
+  restartAnimals(animalLayer, gardenState);
 }
 
-function restartAnimals(animalLayer) {
+function restartAnimals(animalLayer, gardenState) {
   _animalManager?.destroy();
 
   const baseUrl = chrome.runtime.getURL('assets/');
-  const mapDims = getMapDimensions();
+  const mapDims = {
+    ...getMapDimensions(),
+    moveableTiles: getMoveableTiles()
+  };
   _animalManager = new GardenAnimals(animalLayer, mapDims, baseUrl);
-  _animalManager.spawnFrog();
+  _animalManager.spawnGardenAnimals(gardenState);
 }
 
 async function renderGardenList(container, activeGarden, onGardenAction) {

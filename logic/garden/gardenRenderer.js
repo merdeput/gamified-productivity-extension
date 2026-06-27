@@ -72,6 +72,26 @@ export function getPlantableLayers(layerNames = activeGarden?.plantLayers || ['P
   );
 }
 
+export function getMoveableLayer() {
+  if (!mapData) return null;
+  return mapData.layers.find(layer => layer.name === 'Moveable' && layer.type === 'tilelayer') || null;
+}
+
+export function getMoveableTiles() {
+  const layer = getMoveableLayer();
+  if (!mapData || !layer?.data) return [];
+
+  const tiles = [];
+  for (let y = 0; y < mapData.height; y++) {
+    for (let x = 0; x < mapData.width; x++) {
+      if (layer.data[y * mapData.width + x] !== 0) {
+        tiles.push({ tileX: x, tileY: y });
+      }
+    }
+  }
+  return tiles;
+}
+
 /**
  * Check if a tile is plantable
  * @param {number} tileX - Tile X coordinate
@@ -144,8 +164,7 @@ export async function renderMap(container, garden = activeGarden) {
     // Create tiles for the first visible layer (usually the base layer)
     const renderLayers = mapData.layers.filter(layer =>
         layer.type === 'tilelayer' &&
-        layer.visible !== false &&
-        !(garden?.plantLayers || []).includes(layer.name)
+        layer.visible !== false
     );
         
     renderLayers.forEach((layer, layerIndex) => {
@@ -368,6 +387,8 @@ export default {
   loadMapData,
   getPlantableLayer,
   getPlantableLayers,
+  getMoveableLayer,
+  getMoveableTiles,
   getPlantableTile,
   isPlantableTile,
   renderMap,

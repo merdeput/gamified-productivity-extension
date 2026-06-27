@@ -50,10 +50,17 @@ export function vectorToDirection(dx, dy) {
 export class AnimalSprite {
   constructor(config) {
     this.name       = config.name;
+    this.folder     = config.folder || config.name;
     this.states     = config.states;       // { idle: 3, hop: 5, … }
     this.stateOrder = config.stateOrder;   // ['idle', 'hop', …]
     this.frameSize  = config.frameSize || 32;
+    this.frameWidth = config.frameWidth || this.frameSize;
+    this.frameHeight = config.frameHeight || this.frameSize;
+    this.directionRows = config.directionRows || 8;
+    this.fileNames = config.fileNames || null;
+    this.renderScale = config.renderScale || 1.25;
     this.baseUrl    = config.baseUrl   || '';
+    this.flipX      = false;
 
     // Runtime state
     this.currentState     = this.stateOrder[0];
@@ -72,14 +79,13 @@ export class AnimalSprite {
   /** Create & return the DOM element (does NOT append to document) */
   createElement() {
     const el = document.createElement('div');
-    const scale = 1.25;
     el.className = `garden-animal garden-animal--${this.name}`;
     el.style.cssText = `
       position: absolute;
-      width: ${this.frameSize}px;
-      height: ${this.frameSize}px;
-      transform: scale(${scale});
-      transform-origin: top left;
+      width: ${this.frameWidth}px;
+      height: ${this.frameHeight}px;
+      transform: scale(${this.renderScale});
+      transform-origin: center;
       image-rendering: pixelated;
       pointer-events: none;
       z-index: 10;
@@ -106,7 +112,8 @@ export class AnimalSprite {
   // ─── Sprite helpers ───────────────────────────────────────────────────────────
 
   _spriteUrl(state) {
-    return `${this.baseUrl}animal/${this.name}/${this.name}_${state}.png`;
+    const fileName = this.fileNames?.[state] || `${this.name}_${state}.png`;
+    return `${this.baseUrl}animal/${this.folder}/${fileName}`;
   }
 
   _applySprite() {
@@ -114,27 +121,33 @@ export class AnimalSprite {
     const state      = this.currentState;
     const frameCount = this.states[state] || 1;
     const url        = this._spriteUrl(state);
-    const fw         = this.frameSize;
+    const fw         = this.frameWidth;
+    const fh         = this.frameHeight;
 
     // Background-size covers the entire sheet: frameCount cols × 8 rows
     this.el.style.backgroundImage    = `url('${url}')`;
-    this.el.style.backgroundSize     = `${frameCount * fw}px ${8 * fw}px`;
+    this.el.style.backgroundSize     = `${frameCount * fw}px ${this.directionRows * fh}px`;
     this.el.style.backgroundRepeat   = 'no-repeat';
     this._applyFrame();
   }
 
   _applyFrame() {
     if (!this.el) return;
-    const fw  = this.frameSize;
+    const fw  = this.frameWidth;
+    const fh  = this.frameHeight;
     const col = this.currentFrame;
-    const row = this.currentDirection;
-    this.el.style.backgroundPosition = `-${col * fw}px -${row * fw}px`;
+    const row = this.directionRows === 1
+      ? 0
+      : Math.min(this.directionRows - 1, Math.max(0, this.currentDirection));
+    this.el.style.backgroundPosition = `-${col * fw}px -${row * fh}px`;
   }
 
   _applyPosition() {
     if (!this.el) return;
     this.el.style.left = `${Math.round(this.x)}px`;
     this.el.style.top  = `${Math.round(this.y)}px`;
+    const scaleX = this.flipX ? -this.renderScale : this.renderScale;
+    this.el.style.transform = `scale(${scaleX}, ${this.renderScale})`;
   }
 
   // ─── State control ────────────────────────────────────────────────────────────

@@ -16,6 +16,7 @@ export class Garden {
     this.unlocks = data.unlocks || {};
     this.upgrades = data.upgrades || {};
     this.coins = Math.max(0, Number(data.coins || 0));
+    this.animals = Array.isArray(data.animals) ? [...new Set(data.animals.filter(Boolean))] : [];
     this.plants = Array.isArray(data.plants)
       ? data.plants.map(plant => plant instanceof Plant ? plant : new Plant(plant)).filter(plant => Plant.isValid(plant.serialize()))
       : [];
@@ -26,6 +27,7 @@ export class Garden {
       ...fallback,
       ...data,
       plants: Array.isArray(data.plants) ? data.plants : fallback.plants,
+      animals: Array.isArray(data.animals) ? data.animals : fallback.animals,
       coins: data.coins ?? fallback.coins
     });
   }
@@ -101,6 +103,19 @@ export class Garden {
     return true;
   }
 
+  hasAnimal(type) {
+    return this.animals.includes(type);
+  }
+
+  addAnimal(type) {
+    if (!type || this.hasAnimal(type)) {
+      return false;
+    }
+
+    this.animals = [...this.animals, type];
+    return true;
+  }
+
   serialize() {
     return {
       id: this.id,
@@ -112,6 +127,7 @@ export class Garden {
       unlocked: this.unlocked,
       unlocks: this.unlocks,
       upgrades: this.upgrades,
+      animals: [...this.animals],
       plants: this.plants.map(plant => plant.serialize()),
       coins: this.coins
     };

@@ -62,7 +62,7 @@ export const GARDEN_DEFINITION_CONFIGS = [
   {
     id: 'water',
     name: 'Water Garden',
-    description: 'A pond garden with soil banks and aquatic tiles.',
+    description: 'A river garden with soil banks and aquatic tiles.',
     mapFile: 'watermap.tmj',
     plantLayers: ['Plantable', 'Aquatic'],
     price: 150,

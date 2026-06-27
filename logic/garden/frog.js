@@ -99,7 +99,9 @@ export class Frog extends AnimalSprite {
       const ny = this.y + this._vy * speed * (dt / 1000);
 
       // Border check
-      const hitBorder = this._checkBorder(nx, ny, bounds);
+      const hitBorder = bounds.isPositionWalkable
+        ? !bounds.isPositionWalkable(nx, ny, this.frameWidth, this.frameHeight)
+        : this._checkBorder(nx, ny, bounds);
       if (hitBorder && !this._borderBounce) {
         this._borderBounce = true;
         this._enterState('shock', this._bounceDirection());

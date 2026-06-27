@@ -8,6 +8,7 @@
 import { Garden } from './gardenModel.js';
 import { gardenRepository } from './gardenRepository.js';
 import { Plant } from './plant.js';
+import { getShopAnimalDefinition } from './animalDefinitions.js';
 
 export async function loadGarden(gardenId) {
   return gardenRepository.loadGarden(gardenId);
@@ -58,6 +59,26 @@ export async function updateCoins(amount, gardenId) {
   }, gardenId);
 }
 
+export async function purchaseAnimal(type, gardenId) {
+  const definition = getShopAnimalDefinition(type);
+  if (!definition) {
+    throw new Error(`Unknown animal type: ${type}`);
+  }
+
+  return gardenRepository.updateGarden((garden) => {
+    if (garden.hasAnimal(type)) {
+      return garden;
+    }
+
+    if (!garden.spendCoins(definition.price)) {
+      throw new Error(`Not enough coins! Need ${definition.price}, have ${garden.coins}.`);
+    }
+
+    garden.addAnimal(type);
+    return garden;
+  }, gardenId);
+}
+
 export async function getPlant(plantId, gardenId) {
   const garden = await loadGarden(gardenId);
   return garden.plants.find(plant => plant.id === plantId) || null;
@@ -87,6 +108,7 @@ export default {
   removePlant,
   updatePlant,
   updateCoins,
+  purchaseAnimal,
   getPlant,
   getPlantsAtTile,
   createPlant

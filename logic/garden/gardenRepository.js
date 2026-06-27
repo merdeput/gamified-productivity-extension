@@ -101,6 +101,7 @@ export class GardenRepository {
       theme: definition.theme,
       unlocked: definition.defaultUnlocked,
       plants: gardenId === this.defaultGardenId ? state.garden?.plants || [] : [],
+      animals: gardenId === this.defaultGardenId ? state.garden?.animals || [] : [],
       coins: state.garden?.coins || 0
     });
   }
@@ -129,6 +130,7 @@ export class GardenRepository {
 
     if (gardenId === this.defaultGardenId) {
       nextState.garden.plants = serializedGarden.plants;
+      nextState.garden.animals = serializedGarden.animals;
     }
 
     nextState.gardens[this.defaultGardenId] = {
@@ -150,6 +152,7 @@ export class GardenRepository {
   toLegacyGarden(garden) {
     return {
       plants: Array.isArray(garden?.plants) ? garden.plants : [],
+      animals: Array.isArray(garden?.animals) ? garden.animals : [],
       coins: Math.max(0, Number(garden?.coins || 0))
     };
   }
