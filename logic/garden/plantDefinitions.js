@@ -14,7 +14,6 @@ export class PlantDefinition {
     this.displayName = config.displayName;
     this.price = config.price;
     this.description = config.description || '';
-    this.defaultGrowDurationMinutes = config.defaultGrowDurationMinutes || 90;
     this.rarity = config.rarity || 'common';
     this.unlock = config.unlock || null;
     this.sprite = {
@@ -31,6 +30,7 @@ export class PlantDefinition {
       durationWeight: Number(stage.durationWeight || 1),
       isMature: Boolean(stage.isMature)
     }));
+    this.defaultGrowDurationMinutes = config.defaultGrowDurationMinutes ?? this.stages.length * 25;
   }
 
   get stageCount() {
