@@ -14,6 +14,7 @@
  */
 
 import { AnimalSprite, vectorToDirection, DIRECTION } from './animalSprite.js';
+import { FROG_DEFINITION } from './animalDefinitions.js';
 
 // ─── Frog-specific constants ──────────────────────────────────────────────────
 
@@ -66,6 +67,7 @@ export class Frog extends AnimalSprite {
   constructor(baseUrl) {
     super({
       name:       'frog',
+      moveType:   FROG_DEFINITION.moveType,
       states:     FROG_STATES,
       stateOrder: ['idle', 'hop', 'jump', 'croak', 'shock'],
       frameSize:  32,

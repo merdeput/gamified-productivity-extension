@@ -28,8 +28,13 @@ export class GardenAnimals {
       maxX: Math.max(0, mapPixelWidth - 32),
       minY: th,
       maxY: Math.max(th, mapPixelHeight - th - 32),
-      randomPosition: (width = 32, height = 32) => this._randomWalkablePosition(width, height),
-      isPositionWalkable: (x, y, width = 32, height = 32) => this._isPositionWalkable(x, y, width, height)
+      mapMinX: 0,
+      mapMaxX: Math.max(0, mapPixelWidth),
+      mapMinY: 0,
+      mapMaxY: Math.max(0, mapPixelHeight),
+      randomPosition: (width = 32, height = 32, moveType = 'walk') => this._randomPosition(width, height, moveType),
+      isPositionWalkable: (x, y, width = 32, height = 32) => this._isPositionWalkable(x, y, width, height),
+      isPositionAllowed: (x, y, width = 32, height = 32, moveType = 'walk') => this._isPositionAllowed(x, y, width, height, moveType)
     };
   }
 
@@ -45,7 +50,7 @@ export class GardenAnimals {
     }
 
     const animal = factory(this.baseUrl);
-    const spawn = options.position || this.bounds.randomPosition(animal.frameWidth, animal.frameHeight);
+    const spawn = options.position || this.bounds.randomPosition(animal.frameWidth, animal.frameHeight, animal.moveType);
 
     animal.mount(this.container, spawn.x, spawn.y);
     this.animals.push(animal);
@@ -98,7 +103,7 @@ export class GardenAnimals {
 
   spawnInsect(definition) {
     const insect = new Insect(this.baseUrl, definition);
-    const spawn = this.bounds.randomPosition(insect.frameWidth, insect.frameHeight);
+    const spawn = this.bounds.randomPosition(insect.frameWidth, insect.frameHeight, insect.moveType);
 
     insect.mount(this.container, spawn.x, spawn.y);
     this.animals.push(insect);
@@ -137,6 +142,14 @@ export class GardenAnimals {
     }
   }
 
+  _randomPosition(width = 32, height = 32, moveType = 'walk') {
+    if (moveType === 'fly') {
+      return this._randomMapPosition(width, height);
+    }
+
+    return this._randomWalkablePosition(width, height);
+  }
+
   _randomWalkablePosition(width = 32, height = 32) {
     if (this.moveableTiles.length > 0) {
       const tile = this.moveableTiles[Math.floor(Math.random() * this.moveableTiles.length)];
@@ -152,6 +165,26 @@ export class GardenAnimals {
       x: this.bounds.minX + Math.random() * Math.max(0, this.bounds.maxX - this.bounds.minX),
       y: this.bounds.minY + Math.random() * Math.max(0, this.bounds.maxY - this.bounds.minY)
     };
+  }
+
+  _randomMapPosition(width = 32, height = 32) {
+    return {
+      x: this.bounds.mapMinX + Math.random() * Math.max(0, this.bounds.mapMaxX - this.bounds.mapMinX - width),
+      y: this.bounds.mapMinY + Math.random() * Math.max(0, this.bounds.mapMaxY - this.bounds.mapMinY - height)
+    };
+  }
+
+  _isPositionAllowed(x, y, width = 32, height = 32, moveType = 'walk') {
+    if (moveType === 'fly') {
+      return (
+        x >= this.bounds.mapMinX &&
+        y >= this.bounds.mapMinY &&
+        x + width <= this.bounds.mapMaxX &&
+        y + height <= this.bounds.mapMaxY
+      );
+    }
+
+    return this._isPositionWalkable(x, y, width, height);
   }
 
   _isPositionWalkable(x, y, width = 32, height = 32) {

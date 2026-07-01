@@ -5,6 +5,7 @@ export class Insect extends AnimalSprite {
     super({
       name: definition.id,
       folder: 'insects',
+      moveType: definition.moveType || 'fly',
       states: { fly: 4 },
       stateOrder: ['fly'],
       frameWidth: definition.frameWidth || 16,
@@ -36,8 +37,8 @@ export class Insect extends AnimalSprite {
     const wobble = Math.sin(performance.now() / 240 + this.x * 0.07) * 0.35;
     const nx = this.x + (this._vx + wobble * 0.2) * this._speed * (dt / 1000);
     const ny = this.y + (this._vy + wobble) * this._speed * (dt / 1000);
-    const canMove = bounds.isPositionWalkable
-      ? bounds.isPositionWalkable(nx, ny, this.frameWidth, this.frameHeight)
+    const canMove = bounds.isPositionAllowed
+      ? bounds.isPositionAllowed(nx, ny, this.frameWidth, this.frameHeight, this.moveType)
       : nx >= bounds.minX && nx <= bounds.maxX && ny >= bounds.minY && ny <= bounds.maxY;
 
     if (canMove) {

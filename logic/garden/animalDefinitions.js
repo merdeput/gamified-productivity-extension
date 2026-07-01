@@ -1,6 +1,7 @@
 export const CAT_DEFINITION = {
   id: 'orange_cat',
   type: 'orange_cat',
+  moveType: 'walk',
   displayName: 'Orange Cat',
   price: 120,
   description: 'A calm orange garden cat.',
@@ -14,9 +15,17 @@ export const CAT_DEFINITION = {
   }
 };
 
+export const FROG_DEFINITION = {
+  id: 'frog',
+  type: 'frog',
+  moveType: 'walk',
+  displayName: 'Frog'
+};
+
 export const INSECT_DEFINITIONS = [
   {
     id: 'bee1',
+    moveType: 'fly',
     displayName: 'Honey Bee',
     fileName: 'bee1.png',
     plantLayers: ['Plantable'],
@@ -27,6 +36,7 @@ export const INSECT_DEFINITIONS = [
   },
   {
     id: 'bee2',
+    moveType: 'fly',
     displayName: 'Garden Bee',
     fileName: 'bee2.png',
     plantLayers: ['Plantable'],
@@ -37,6 +47,7 @@ export const INSECT_DEFINITIONS = [
   },
   {
     id: 'bee3',
+    moveType: 'fly',
     displayName: 'Tiny Bee',
     fileName: 'bee3.png',
     plantLayers: ['Plantable'],
@@ -47,6 +58,7 @@ export const INSECT_DEFINITIONS = [
   },
   {
     id: 'blue_butterfly',
+    moveType: 'fly',
     displayName: 'Blue Butterfly',
     fileName: 'blue-butterfly.png',
     frameHeight: 15,
@@ -58,6 +70,7 @@ export const INSECT_DEFINITIONS = [
   },
   {
     id: 'pink_butterfly',
+    moveType: 'fly',
     displayName: 'Pink Butterfly',
     fileName: 'pink-butterfly.png',
     plantLayers: ['Plantable', 'Aquatic'],
@@ -68,6 +81,7 @@ export const INSECT_DEFINITIONS = [
   },
   {
     id: 'blue_dragon_fly',
+    moveType: 'fly',
     displayName: 'Blue Dragonfly',
     fileName: 'blue-dragon-fly.png',
     plantLayers: ['Aquatic'],
@@ -78,6 +92,7 @@ export const INSECT_DEFINITIONS = [
   },
   {
     id: 'green_dragon_fly',
+    moveType: 'fly',
     displayName: 'Green Dragonfly',
     fileName: 'green-dragon-fly.png',
     plantLayers: ['Aquatic'],

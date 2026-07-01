@@ -51,6 +51,7 @@ export class AnimalSprite {
   constructor(config) {
     this.name       = config.name;
     this.folder     = config.folder || config.name;
+    this.moveType   = config.moveType || 'walk';
     this.states     = config.states;       // { idle: 3, hop: 5, … }
     this.stateOrder = config.stateOrder;   // ['idle', 'hop', …]
     this.frameSize  = config.frameSize || 32;

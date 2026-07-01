@@ -11,6 +11,7 @@ export class Cat extends AnimalSprite {
     super({
       name: CAT_DEFINITION.id,
       folder: CAT_DEFINITION.folder,
+      moveType: CAT_DEFINITION.moveType,
       states: CAT_DEFINITION.states,
       stateOrder: ['idle', 'walk'],
       frameWidth: CAT_DEFINITION.frameWidth,
